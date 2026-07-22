@@ -47,19 +47,20 @@ const BOTTOM_ROW = { yFrac: 0.9, xStep: 0.13, rots: [2, -3], scale: 0.34 };
  * No spring on mobile — transforms track the finger 1:1, which is what
  * makes touch scrolling feel smooth.
  *
- * Choreography: the outer (left/right) cards descend FIRST — symmetric
- * pairs in perfect sync — and the center cards descend LAST. The center
- * fan slots belong to the FIRST projects, so the last cards to land are
- * the ones at the top of the grid.
+ * Choreography: EVERY card starts moving from the very first scroll pixel
+ * (no perceived lag), but at different speeds — outer (left/right) cards
+ * travel fast and land first (symmetric pairs in perfect sync), center
+ * cards travel slower and land last. The center fan slots belong to the
+ * FIRST projects, so the last cards to land are the top of the grid.
  */
 const MOBILE_FAN = {
   yFrac: 0.92,
   rotStep: 8,
   dipPx: 12,
   scale: 0.3,
-  // Stagger: outer cards travel over [0, dur]; center over [maxDelay, 1].
-  maxDelay: 0.45,
-  dur: 0.55,
+  // Outer cards finish their travel at this fraction of the scroll range;
+  // center cards stretch all the way to 1.
+  fastDur: 0.55,
 };
 
 type Scatter = {
@@ -174,10 +175,12 @@ export function HomeShowcase({
           targetCY = vh * MOBILE_FAN.yFrac + Math.abs(off) * MOBILE_FAN.dipPx;
           rot = off * MOBILE_FAN.rotStep;
           scale = MOBILE_FAN.scale;
-          // Outer cards (d=1) start at 0; center cards (d=0) start last.
+          // Everyone starts at 0 (no dead zone at the top of the scroll);
+          // outer cards (d=1) travel fast and finish early, center cards
+          // (d=0) travel slower and finish last.
           const d = Math.abs(off) / maxOff;
-          start = (1 - d) * MOBILE_FAN.maxDelay;
-          dur = MOBILE_FAN.dur;
+          start = 0;
+          dur = MOBILE_FAN.fastDur + (1 - d) * (1 - MOBILE_FAN.fastDur);
         } else if (i >= sideCount) {
           // Overflow row at the bottom, spread evenly around center.
           const j = i - sideCount;
