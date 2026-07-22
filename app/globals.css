@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (next-themes adds .dark on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Light theme — minimal white, Apple/Google style */
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --foreground: #0a0a0a;
+  --muted: #6b7280;
+  --muted-foreground: #71717a;
+  --border: #ececec;
+  --border-strong: #d4d4d8;
+  --card: #fafafa;
+  --accent: #0a0a0a;
+  --accent-foreground: #ffffff;
+  --ring: #0a0a0a1a;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  /* Dark theme — true black */
+  --background: #000000;
+  --surface: #0a0a0a;
+  --surface-elevated: #111111;
+  --foreground: #f5f5f5;
+  --muted: #8a8a8f;
+  --muted-foreground: #a1a1aa;
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
+  --card: #0e0e0e;
+  --accent: #ffffff;
+  --accent-foreground: #0a0a0a;
+  --ring: #ffffff26;
+  --glass: rgba(20, 20, 20, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Default border color — layered so utility classes (e.g. border-[#0D99FF])
+   can still override it. */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Scattered hero cards intentionally hang off-screen — never allow
+   horizontal scrolling because of them. */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
+}
+
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* Minimal, near-invisible scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid var(--background);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Reusable utilities */
+.glass {
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--glass-border);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s var(--ease-out-expo) both;
+}
