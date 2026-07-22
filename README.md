@@ -48,3 +48,5 @@ persistence, connect Supabase:
 
 Deploy to [Vercel](https://vercel.com): import the repo, add the two
 `NEXT_PUBLIC_SUPABASE_*` environment variables, and ship.
+
+Live at: https://portfolio-yazeedkamals-projects.vercel.app
