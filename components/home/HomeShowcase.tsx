@@ -57,7 +57,7 @@ const MOBILE_FAN = {
   yFrac: 0.92,
   rotStep: 8,
   dipPx: 12,
-  scale: 0.3,
+  scale: 0.38,
   // Outer cards finish their travel at this fraction of the scroll range;
   // center cards stretch all the way to 1.
   fastDur: 0.55,
