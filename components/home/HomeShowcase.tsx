@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   motion,
@@ -42,12 +43,19 @@ const DESKTOP_SIDE_SEEDS = [
 const BOTTOM_ROW = { yFrac: 0.9, xStep: 0.13, rots: [2, -3], scale: 0.34 };
 
 /**
- * Mobile: cards start as an overlapping fan pinned to the bottom of the
- * full-screen hero (outer edges bleed off-screen) and scrub to the grid
- * with scroll. No spring on mobile — transforms track the finger 1:1,
- * which is what makes touch scrolling feel smooth.
+ * Mobile: up to 4 STATIC cover cards hugging the screen edges (2 left,
+ * 2 right) in an organized-random layout — no scroll binding, so touch
+ * scrolling stays native-smooth. The grid below reveals normally.
+ * top = % of hero height; negative x bleeds slightly off-screen.
  */
-const MOBILE_FAN = { yFrac: 0.92, rotStep: 8, dipPx: 12, scale: 0.3 };
+const MOBILE_SIDE_SEEDS = [
+  { side: "left" as const, top: 60, x: "-9vw", rot: -8, w: "31vw" },
+  { side: "right" as const, top: 66, x: "-10vw", rot: 9, w: "33vw" },
+  { side: "left" as const, top: 81, x: "-7vw", rot: 6, w: "33vw" },
+  { side: "right" as const, top: 87, x: "-8vw", rot: -5, w: "31vw" },
+];
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 type Scatter = { dx: number; dy: number; rot: number; scale: number };
 
@@ -67,16 +75,13 @@ export function HomeShowcase({
   const gridRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [scatters, setScatters] = useState<(Scatter | null)[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const rangeRef = useRef(1);
   const reduced = useReducedMotion();
 
-  // 0 = scattered in the hero, 1 = settled in grid.
-  // `raw` tracks scroll 1:1; the spring smooths it for desktop only —
-  // on touch, 1:1 tracking is what feels smooth.
+  // 0 = scattered in the hero, 1 = settled in grid (desktop only —
+  // mobile shows the static side cards instead).
   const raw = useMotionValue(0);
-  const sprung = useSpring(raw, { stiffness: 110, damping: 26, mass: 0.6 });
-  const settle = isMobile ? raw : sprung;
+  const settle = useSpring(raw, { stiffness: 110, damping: 26, mass: 0.6 });
 
   // Drive progress from window scroll (stable listener, range via ref).
   useEffect(() => {
@@ -92,20 +97,19 @@ export function HomeShowcase({
   useEffect(() => {
     function measure() {
       if (!gridRef.current) return;
-      if (reduced) {
+      // Mobile: static side cards in the hero, plain grid — no scroll binding.
+      if (reduced || window.innerWidth < 768) {
         setScatters([]);
         return;
       }
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const mobile = vw < 768;
-      setIsMobile(mobile);
       const gridTop = gridRef.current.getBoundingClientRect().top + window.scrollY;
       // Fully settled a bit before the grid reaches mid-viewport.
       rangeRef.current = Math.max(1, gridTop - vh * 0.45);
       // Sync progress to the current position without animating.
       raw.jump(Math.min(1, Math.max(0, window.scrollY / rangeRef.current)));
-      sprung.jump(raw.get());
+      settle.jump(raw.get());
 
       const margin = vw * 0.03;
       // Every card scatters.
@@ -135,16 +139,7 @@ export function HomeShowcase({
         let rot: number;
         let scale: number;
 
-        if (mobile) {
-          // Overlapping fan at the very bottom of the full-screen hero —
-          // outer cards tilt more, dip lower, and bleed off-screen.
-          const off = i - (n - 1) / 2;
-          const xStep = Math.min(0.21, 1.15 / Math.max(1, n - 1));
-          targetCX = vw * (0.5 + off * xStep);
-          targetCY = vh * MOBILE_FAN.yFrac + Math.abs(off) * MOBILE_FAN.dipPx;
-          rot = off * MOBILE_FAN.rotStep;
-          scale = MOBILE_FAN.scale;
-        } else if (i >= sideCount) {
+        if (i >= sideCount) {
           // Overflow row at the bottom, spread evenly around center.
           const j = i - sideCount;
           targetCX = vw * (0.5 + (j - (bottomCount - 1) / 2) * bottomStep);
@@ -179,16 +174,19 @@ export function HomeShowcase({
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [reduced, projects.length, raw, sprung]);
+  }, [reduced, projects.length, raw, settle]);
 
   return (
     <>
-      <Hero
-        showAvailable={showAvailable}
-        title={heroTitle}
-        subtitle={heroSubtitle}
-        highlight={heroHighlight}
-      />
+      <div className="relative">
+        <Hero
+          showAvailable={showAvailable}
+          title={heroTitle}
+          subtitle={heroSubtitle}
+          highlight={heroHighlight}
+        />
+        <MobileSideCards projects={projects} />
+      </div>
 
       <section id="work" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">
         <Reveal>
@@ -284,6 +282,58 @@ function ScatterCard({
         hoverTilt={floating}
       />
     </motion.div>
+  );
+}
+
+/**
+ * Mobile-only: up to 4 static cover cards on the screen edges (2 left,
+ * 2 right), organized-random tilts, slightly bleeding off-screen. They
+ * never move with scroll — native-smooth touch scrolling — and each one
+ * links to its project.
+ */
+function MobileSideCards({ projects }: { projects: Project[] }) {
+  const cards = projects.slice(0, MOBILE_SIDE_SEEDS.length);
+  if (cards.length === 0) return null;
+
+  return (
+    <div className="md:hidden">
+      {cards.map((p, i) => {
+        const seed = MOBILE_SIDE_SEEDS[i];
+        return (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 32 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 + i * 0.08, ease }}
+            className="absolute"
+            style={{
+              top: `${seed.top}%`,
+              width: seed.w,
+              ...(seed.side === "left" ? { left: seed.x } : { right: seed.x }),
+            }}
+          >
+            <Link
+              href={`/work/${p.slug}`}
+              className="block"
+              style={{ transform: `rotate(${seed.rot}deg)` }}
+            >
+              <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+                {p.cover_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.cover_url}
+                    alt={p.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-foreground/5" />
+                )}
+              </div>
+            </Link>
+          </motion.div>
+        );
+      })}
+    </div>
   );
 }
 
