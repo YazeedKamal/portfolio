@@ -156,7 +156,7 @@ export function Hero({
   highlight?: string | null;
 }) {
   return (
-    <section className="relative flex min-h-[92vh] flex-col items-center justify-center px-6 text-center">
+    <section className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 pb-28 text-center md:min-h-[92vh] md:pb-0">
       {/* soft radial glow */}
       <div
         aria-hidden

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   motion,
@@ -41,11 +42,12 @@ const DESKTOP_SIDE_SEEDS = [
 const BOTTOM_ROW = { yFrac: 0.9, xStep: 0.13, rots: [2, -3], scale: 0.34 };
 
 /**
- * Mobile: a tidy overlapping row of mini cards at the end of the hero —
- * spacing is computed evenly from the card count; these control the gentle
- * up/down stagger and soft alternating tilts.
+ * Mobile: scroll-linked springs feel janky with touch momentum, so instead
+ * of scattering the real grid cards we render a static decorative fan of
+ * covers pinned to the very bottom of the hero (edges intentionally bleed
+ * off-screen). The grid below reveals normally.
  */
-const MOBILE_ROTS = [-6, 4, -3, 5, -4, 2];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 type Scatter = { dx: number; dy: number; rot: number; scale: number };
 
@@ -86,13 +88,14 @@ export function HomeShowcase({
   useEffect(() => {
     function measure() {
       if (!gridRef.current) return;
-      if (reduced) {
+      // Mobile gets the static hero fan instead — scroll-linked springs
+      // fight with touch momentum and feel janky.
+      if (reduced || window.innerWidth < 768) {
         setScatters([]);
         return;
       }
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const isMobile = vw < 768;
       const gridTop = gridRef.current.getBoundingClientRect().top + window.scrollY;
       // Fully settled a bit before the grid reaches mid-viewport.
       rangeRef.current = Math.max(1, gridTop - vh * 0.45);
@@ -127,13 +130,7 @@ export function HomeShowcase({
         let rot: number;
         let scale: number;
 
-        if (isMobile) {
-          // Tidy overlapping row; spacing computed evenly from the count.
-          targetCX = vw * ((i + 0.5) / n);
-          targetCY = vh * (i % 2 === 0 ? 0.86 : 0.895);
-          rot = MOBILE_ROTS[i % MOBILE_ROTS.length];
-          scale = 0.28;
-        } else if (i >= sideCount) {
+        if (i >= sideCount) {
           // Overflow row at the bottom, spread evenly around center.
           const j = i - sideCount;
           targetCX = vw * (0.5 + (j - (bottomCount - 1) / 2) * bottomStep);
@@ -172,12 +169,15 @@ export function HomeShowcase({
 
   return (
     <>
-      <Hero
-        showAvailable={showAvailable}
-        title={heroTitle}
-        subtitle={heroSubtitle}
-        highlight={heroHighlight}
-      />
+      <div className="relative">
+        <Hero
+          showAvailable={showAvailable}
+          title={heroTitle}
+          subtitle={heroSubtitle}
+          highlight={heroHighlight}
+        />
+        <MobileFan projects={projects} />
+      </div>
 
       <section id="work" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">
         <Reveal>
@@ -259,15 +259,70 @@ function ScatterCard({
     setFloating(!!scatter && p < 0.9);
   });
 
+  // No scatter (mobile / reduced motion / pre-measure): plain card with its
+  // regular whileInView entrance.
+  if (!scatter) return <ProjectCard project={project} index={index} />;
+
   return (
     <motion.div style={{ x, y, rotate, scale }}>
       <ProjectCard
         project={project}
         index={index}
         noEntrance
-        metaOpacity={scatter ? metaOpacity : undefined}
+        metaOpacity={metaOpacity}
         hoverTilt={floating}
       />
     </motion.div>
+  );
+}
+
+/**
+ * Mobile-only decorative fan: overlapping cover cards pinned to the very
+ * bottom of the hero, arcing like a hand of cards — the outer ones bleed
+ * off-screen on purpose. Static (no scroll binding) so touch scrolling
+ * stays perfectly smooth; each card still links to its project.
+ */
+function MobileFan({ projects }: { projects: Project[] }) {
+  const cards = projects.slice(0, 5);
+  const n = cards.length;
+  if (n === 0) return null;
+
+  return (
+    <div className="absolute inset-x-0 bottom-0 z-10 flex translate-y-[18%] justify-center md:hidden">
+      {cards.map((p, i) => {
+        const off = i - (n - 1) / 2; // ...-1, 0, 1... around the center
+        const rot = off * 8;
+        const dip = Math.abs(off) * 14; // outer cards sit lower — gentle arc
+        return (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 48 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35 + i * 0.07, ease }}
+            className="-mx-2 shrink-0"
+            style={{ zIndex: 10 - Math.abs(off) * 2 }}
+          >
+            <Link
+              href={`/work/${p.slug}`}
+              className="block"
+              style={{ transform: `translateY(${dip}px) rotate(${rot}deg)` }}
+            >
+              <div className="aspect-[4/3] w-[34vw] overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+                {p.cover_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.cover_url}
+                    alt={p.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-foreground/5" />
+                )}
+              </div>
+            </Link>
+          </motion.div>
+        );
+      })}
+    </div>
   );
 }
