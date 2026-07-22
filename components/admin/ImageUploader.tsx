@@ -13,11 +13,13 @@ export function ImageUploader({
   onChange,
   label = "Image",
   aspect = "aspect-[16/9]",
+  bucket = "project-images",
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
   label?: string;
   aspect?: string;
+  bucket?: "project-images" | "avatars";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -31,11 +33,11 @@ export function ImageUploader({
       const ext = file.name.split(".").pop() ?? "png";
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
-        .from("project-images")
+        .from(bucket)
         .upload(path, file, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
 
-      const { data } = supabase.storage.from("project-images").getPublicUrl(path);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       onChange(data.publicUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");

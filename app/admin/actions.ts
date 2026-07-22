@@ -3,7 +3,32 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import type { ContentBlock } from "@/lib/types";
+import type { ContentBlock, Testimonial } from "@/lib/types";
+
+type TestimonialInput = {
+  name: string;
+  role: string;
+  avatar_url: string | null;
+  quote: string;
+};
+
+function cleanTestimonial(input: TestimonialInput) {
+  return {
+    name: input.name.trim().slice(0, 120),
+    role: input.role.trim().slice(0, 160) || null,
+    avatar_url: input.avatar_url?.trim() || null,
+    quote: input.quote.trim().slice(0, 2000),
+  };
+}
+
+async function authenticatedClient() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Your admin session has expired. Sign in again." } as const;
+  return { supabase } as const;
+}
 
 function slugify(input: string) {
   return input
@@ -162,5 +187,68 @@ export async function reorderProjects(orderedIds: string[]) {
   );
   revalidatePath("/admin");
   revalidatePath("/");
+  return { ok: true };
+}
+
+export async function createTestimonial(input: TestimonialInput) {
+  const values = cleanTestimonial(input);
+  if (!values.name || !values.quote) {
+    return { error: "Name and testimonial text are required." };
+  }
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { data: existing } = await auth.supabase
+    .from("testimonials")
+    .select("order_index")
+    .order("order_index", { ascending: false })
+    .limit(1);
+  const orderIndex = (existing?.[0]?.order_index ?? -1) + 1;
+
+  const { data, error } = await auth.supabase
+    .from("testimonials")
+    .insert({ ...values, order_index: orderIndex })
+    .select("*")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? "Could not add testimonial." };
+  revalidatePath("/");
+  revalidatePath("/admin/testimonials");
+  return { data: data as Testimonial };
+}
+
+export async function updateTestimonial(id: string, input: TestimonialInput) {
+  const values = cleanTestimonial(input);
+  if (!id || !values.name || !values.quote) {
+    return { error: "Name and testimonial text are required." };
+  }
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { data, error } = await auth.supabase
+    .from("testimonials")
+    .update(values)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? "Could not save testimonial." };
+  revalidatePath("/");
+  revalidatePath("/admin/testimonials");
+  return { data: data as Testimonial };
+}
+
+export async function deleteTestimonial(id: string) {
+  if (!id) return { error: "Testimonial not found." };
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { error } = await auth.supabase.from("testimonials").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/testimonials");
   return { ok: true };
 }

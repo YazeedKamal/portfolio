@@ -90,6 +90,7 @@ export function HomeShowcase({
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [scatters, setScatters] = useState<(Scatter | null)[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
   const rangeRef = useRef(1);
   const reduced = useReducedMotion();
 
@@ -220,6 +221,15 @@ export function HomeShowcase({
     return () => window.removeEventListener("resize", measure);
   }, [reduced, projects.length, raw, sprung]);
 
+  // The hero cards rise into place only on the first page reveal. Keeping
+  // this gate outside ScatterCard prevents a resize/re-measure remount from
+  // replaying the opening choreography.
+  useEffect(() => {
+    if (reduced || scatters.length === 0 || introComplete) return;
+    const timer = window.setTimeout(() => setIntroComplete(true), 1800);
+    return () => window.clearTimeout(timer);
+  }, [introComplete, reduced, scatters.length]);
+
   return (
     <>
       <Hero
@@ -272,6 +282,7 @@ export function HomeShowcase({
                   index={i}
                   scatter={scatters[i] ?? null}
                   settle={settle}
+                  playEntrance={!introComplete && !reduced}
                 />
               </div>
             ))}
@@ -287,11 +298,13 @@ function ScatterCard({
   index,
   scatter,
   settle,
+  playEntrance,
 }: {
   project: Project;
   index: number;
   scatter: Scatter | null;
   settle: MotionValue<number>;
+  playEntrance: boolean;
 }) {
   // Local progress: this card animates over its own [start, start+dur]
   // window inside the global progress (stagger choreography).
@@ -326,14 +339,26 @@ function ScatterCard({
   if (!scatter) return <ProjectCard project={project} index={index} />;
 
   return (
-    <motion.div style={{ x, y, rotate, scale }}>
-      <ProjectCard
-        project={project}
-        index={index}
-        noEntrance
-        metaOpacity={metaOpacity}
-        hoverTilt={floating}
-      />
+    <motion.div
+      data-project-intro={project.id}
+      initial={playEntrance ? { opacity: 0, y: "32vh", scale: 0.9 } : false}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.9,
+        delay: 0.3 + Math.floor(index / 2) * 0.09,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="will-change-transform"
+    >
+      <motion.div style={{ x, y, rotate, scale }}>
+        <ProjectCard
+          project={project}
+          index={index}
+          noEntrance
+          metaOpacity={metaOpacity}
+          hoverTilt={floating}
+        />
+      </motion.div>
     </motion.div>
   );
 }
