@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, type MotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/types";
 
@@ -12,15 +12,17 @@ export function ProjectCard({
   project,
   index,
   noEntrance = false,
-  metaOpacity,
+  settled = true,
   hoverTilt = false,
 }: {
   project: Project;
   index: number;
   /** Skip the whileInView entrance (used when scroll-scatter drives the motion). */
   noEntrance?: boolean;
-  /** Scroll-linked opacity for the title/subtitle row (hidden while scattered). */
-  metaOpacity?: MotionValue<number>;
+  /** True once the card has landed in the grid — enables the meta overlay
+   *  (visible on hover on desktop, always visible on mobile). While the card
+   *  is still floating in the hero the overlay stays hidden. */
+  settled?: boolean;
   /** Add the playful random tilt on hover (only while floating in the hero). */
   hoverTilt?: boolean;
 }) {
@@ -53,23 +55,38 @@ export function ProjectCard({
             </div>
           )}
 
-          <div className="absolute right-4 top-4 grid h-10 w-10 translate-y-2 place-items-center rounded-full bg-background/80 opacity-0 backdrop-blur transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-            <ArrowUpRight className="h-5 w-5" />
+          <div
+            className={`absolute right-4 top-4 z-20 items-center gap-1.5 rounded-full bg-background/80 px-3.5 py-2 text-sm font-medium backdrop-blur transition-all duration-500 ${
+              settled
+                ? "inline-flex translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
+                : "hidden"
+            }`}
+          >
+            Show details
+            <ArrowUpRight className="h-4 w-4" />
+          </div>
+
+          {/* Meta overlay — sits over the cover with a soft dark gradient.
+              Hidden until the card lands; on desktop it reveals on hover,
+              on mobile it stays visible once the cards settle into the grid. */}
+          <div
+            className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-1 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-5 pb-5 pt-16 transition-opacity duration-300 ${
+              settled
+                ? "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                : "opacity-0"
+            }`}
+          >
+            <h3 className="line-clamp-2 text-lg font-semibold tracking-tight text-white">
+              {project.title}
+            </h3>
+            {project.subtitle && (
+              <p className="line-clamp-1 text-sm text-white/80">
+                {project.subtitle}
+              </p>
+            )}
           </div>
         </div>
       </div>
-
-      <motion.div
-        style={metaOpacity ? { opacity: metaOpacity } : undefined}
-        className="mt-4 flex items-baseline justify-between gap-4 px-1"
-      >
-        <h3 className="text-lg font-medium tracking-tight">{project.title}</h3>
-        {project.subtitle && (
-          <p className="hidden shrink-0 text-sm text-muted-foreground sm:block">
-            {project.subtitle.split(".")[0]}
-          </p>
-        )}
-      </motion.div>
     </Link>
   );
 

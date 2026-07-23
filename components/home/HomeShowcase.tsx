@@ -268,6 +268,12 @@ export function HomeShowcase({
                 ref={(el) => {
                   cardRefs.current[i] = el;
                 }}
+                // While the cards overlap in the floating fan (mobile) / scatter,
+                // earlier cards (top of the grid) sit at the CENTER and should
+                // stack above the outer ones. Descending z-index by index does
+                // that; it's harmless once they settle into the non-overlapping
+                // grid. Grid items honor z-index without needing `position`.
+                style={{ zIndex: projects.length - i }}
               >
                 <ScatterCard
                   // Remount when the measured delta changes so the motion
@@ -320,10 +326,6 @@ function ScatterCard({
   const scale = useTransform(settle, (p) =>
     scatter ? scatter.scale + (1 - scatter.scale) * local(p) : 1,
   );
-  // Title/subtitle stay hidden while the card floats; fade in as it lands.
-  const metaOpacity = useTransform(settle, (p) =>
-    Math.min(1, Math.max(0, (local(p) - 0.85) / 0.15)),
-  );
 
   // Playful hover tilt only while floating — once settled in the grid,
   // hover falls back to the plain zoom.
@@ -355,7 +357,7 @@ function ScatterCard({
           project={project}
           index={index}
           noEntrance
-          metaOpacity={metaOpacity}
+          settled={!floating}
           hoverTilt={floating}
         />
       </motion.div>

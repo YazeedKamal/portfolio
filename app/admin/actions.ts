@@ -185,9 +185,11 @@ export async function setHeroText(title: string, subtitle: string, highlight: st
   const supabase = await createClient();
   const { error } = await supabase.from("site_settings").upsert({
     id: "main",
-    // Empty inputs fall back to the built-in default copy.
+    // Empty title/highlight fall back to the built-in default copy.
     hero_title: title.trim() || null,
-    hero_subtitle: subtitle.trim() || null,
+    // Description: keep an explicit empty string (`""`) when cleared so the
+    // homepage hides it — only a never-set `null` falls back to the default.
+    hero_subtitle: subtitle.trim(),
     // Word/phrase inside the title that gets the Figma-selection effect.
     hero_highlight: highlight.trim() || null,
     updated_at: new Date().toISOString(),

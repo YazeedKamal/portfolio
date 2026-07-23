@@ -187,14 +187,18 @@ export function Hero({
         {renderTitle(title || DEFAULT_TITLE, highlight)}
       </motion.h1>
 
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.15, ease }}
-        className="mt-6 max-w-xl text-balance text-lg text-muted-foreground"
-      >
-        {subtitle || DEFAULT_SUBTITLE}
-      </motion.p>
+      {/* `null`/undefined = never configured → default copy; an explicit
+          empty string (admin cleared it) hides the description entirely. */}
+      {(subtitle ?? DEFAULT_SUBTITLE) && (
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15, ease }}
+          className="mt-6 max-w-xl text-balance text-lg text-muted-foreground"
+        >
+          {subtitle ?? DEFAULT_SUBTITLE}
+        </motion.p>
+      )}
 
       <motion.a
         href="#work"

@@ -19,7 +19,9 @@ export function HeroTextForm({
   initialHighlight: string | null;
 }) {
   const [title, setTitle] = useState(initialTitle ?? "");
-  const [subtitle, setSubtitle] = useState(initialSubtitle ?? "");
+  // Description is preset with the default copy the first time (never saved);
+  // clearing it and saving leaves the homepage description empty.
+  const [subtitle, setSubtitle] = useState(initialSubtitle ?? DEFAULT_SUBTITLE);
   const [highlight, setHighlight] = useState(initialHighlight ?? "");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +51,7 @@ export function HeroTextForm({
     <div className="rounded-2xl border border-border bg-card px-5 py-4">
       <p className="text-sm font-medium">Hero text</p>
       <p className="mt-0.5 text-xs text-muted-foreground">
-        The big headline and the description under it on your homepage. Leave
-        empty to use the default copy.
+        The big headline and the description under it on your homepage.
       </p>
 
       <div className="mt-4 space-y-3">
@@ -75,10 +76,14 @@ export function HeroTextForm({
             id="hero-subtitle"
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
-            placeholder={DEFAULT_SUBTITLE}
+            placeholder="Leave empty to hide the description"
             rows={3}
             className={`${inputCls} resize-y`}
           />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Prefilled with the default copy — edit it, or clear it to hide the
+            description on your homepage.
+          </p>
         </div>
 
         <div>
