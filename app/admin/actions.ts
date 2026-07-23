@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import type { ContentBlock, Testimonial } from "@/lib/types";
+import type {
+  ContentBlock,
+  SpotlightItem,
+  SpotlightLayout,
+  Testimonial,
+} from "@/lib/types";
+import { normalizeSpotlightLayout } from "@/lib/spotlight-layout";
 
 type TestimonialInput = {
   name: string;
@@ -12,12 +18,36 @@ type TestimonialInput = {
   quote: string;
 };
 
+export type SpotlightInput = {
+  media_type: "image" | "video";
+  media_url: string;
+  title: string;
+  caption: string;
+  location: string;
+  taken_at: string;
+  published: boolean;
+  layout: SpotlightLayout;
+};
+
 function cleanTestimonial(input: TestimonialInput) {
   return {
     name: input.name.trim().slice(0, 120),
     role: input.role.trim().slice(0, 160) || null,
     avatar_url: input.avatar_url?.trim() || null,
     quote: input.quote.trim().slice(0, 2000),
+  };
+}
+
+function cleanSpotlight(input: SpotlightInput) {
+  return {
+    media_type: input.media_type === "video" ? ("video" as const) : ("image" as const),
+    media_url: input.media_url.trim(),
+    title: input.title.trim().slice(0, 120),
+    caption: input.caption.trim().slice(0, 2000) || null,
+    location: input.location.trim().slice(0, 160) || null,
+    taken_at: /^\d{4}-\d{2}-\d{2}$/.test(input.taken_at) ? input.taken_at : null,
+    published: input.published,
+    layout: normalizeSpotlightLayout(input.layout, 0),
   };
 }
 
@@ -250,5 +280,103 @@ export async function deleteTestimonial(id: string) {
   if (error) return { error: error.message };
   revalidatePath("/");
   revalidatePath("/admin/testimonials");
+  return { ok: true };
+}
+
+export async function createSpotlightItem(input: SpotlightInput) {
+  const values = cleanSpotlight(input);
+  if (!values.media_url) return { error: "Add a photo or video first." };
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { data: existing } = await auth.supabase
+    .from("spotlight_items")
+    .select("order_index")
+    .order("order_index", { ascending: false })
+    .limit(1);
+  const orderIndex = (existing?.[0]?.order_index ?? -1) + 1;
+
+  const { data, error } = await auth.supabase
+    .from("spotlight_items")
+    .insert({ ...values, order_index: orderIndex })
+    .select("*")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? "Could not add Spotlight item." };
+  revalidatePath("/");
+  revalidatePath("/admin/spotlight");
+  return { data: data as SpotlightItem };
+}
+
+export async function updateSpotlightItem(id: string, input: SpotlightInput) {
+  const values = cleanSpotlight(input);
+  if (!id || !values.media_url) return { error: "Add a photo or video first." };
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { data, error } = await auth.supabase
+    .from("spotlight_items")
+    .update(values)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? "Could not save Spotlight item." };
+  revalidatePath("/");
+  revalidatePath("/admin/spotlight");
+  return { data: data as SpotlightItem };
+}
+
+export async function deleteSpotlightItem(id: string) {
+  if (!id) return { error: "Spotlight item not found." };
+
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const { error } = await auth.supabase.from("spotlight_items").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/spotlight");
+  return { ok: true };
+}
+
+export async function reorderSpotlightItems(orderedIds: string[]) {
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const results = await Promise.all(
+    orderedIds.map((id, index) =>
+      auth.supabase.from("spotlight_items").update({ order_index: index }).eq("id", id),
+    ),
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) return { error: failed.error.message };
+
+  revalidatePath("/");
+  revalidatePath("/admin/spotlight");
+  return { ok: true };
+}
+
+export async function saveSpotlightLayouts(
+  layouts: { id: string; layout: SpotlightLayout }[],
+) {
+  const auth = await authenticatedClient();
+  if ("error" in auth) return { error: auth.error };
+
+  const results = await Promise.all(
+    layouts.map(({ id, layout }, index) =>
+      auth.supabase
+        .from("spotlight_items")
+        .update({ layout: normalizeSpotlightLayout(layout, index) })
+        .eq("id", id),
+    ),
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) return { error: failed.error.message };
+
+  revalidatePath("/");
+  revalidatePath("/admin/spotlight");
   return { ok: true };
 }

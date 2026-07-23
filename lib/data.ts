@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { sampleProjects, sampleTestimonials } from "@/lib/sample-data";
-import type { Project, Testimonial } from "@/lib/types";
+import { normalizeSpotlightLayout } from "@/lib/spotlight-layout";
+import type { Project, SpotlightItem, Testimonial } from "@/lib/types";
 
 /** Published projects for the home grid (falls back to sample data). */
 export async function getPublishedProjects(): Promise<Project[]> {
@@ -74,4 +75,21 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 
   if (error || !data) return sampleTestimonials;
   return data as Testimonial[];
+}
+
+export async function getSpotlightItems(): Promise<SpotlightItem[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("spotlight_items")
+    .select("*")
+    .eq("published", true)
+    .order("order_index", { ascending: true });
+
+  if (error || !data) return [];
+  return data.map((item, index) => ({
+    ...item,
+    layout: normalizeSpotlightLayout(item.layout, index),
+  })) as SpotlightItem[];
 }

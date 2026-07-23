@@ -10,6 +10,7 @@ import { signOut } from "@/app/admin/actions";
 const tabs = [
   { href: "/admin", label: "Projects" },
   { href: "/admin/testimonials", label: "Testimonials" },
+  { href: "/admin/spotlight", label: "Spotlight" },
   { href: "/admin/settings", label: "Settings" },
 ];
 
@@ -52,32 +53,34 @@ export function AdminNav() {
       </div>
 
       {/* Segmented tabs */}
-      <div className="flex w-fit items-center gap-1 rounded-full border border-border bg-card p-1">
-        {tabs.map((tab) => {
-          const active = isActive(pathname, tab.href);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className="relative rounded-full px-5 py-2 text-sm font-medium"
-            >
-              {active && (
-                <motion.span
-                  layoutId="admin-tab"
-                  className="absolute inset-0 rounded-full bg-foreground"
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                />
-              )}
-              <span
-                className={`relative z-10 transition-colors ${
-                  active ? "text-background" : "text-foreground/60 hover:text-foreground"
-                }`}
+      <div className="max-w-full overflow-x-auto rounded-full">
+        <div className="flex w-max items-center gap-1 rounded-full border border-border bg-card p-1">
+          {tabs.map((tab) => {
+            const active = isActive(pathname, tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className="relative rounded-full px-5 py-2 text-sm font-medium"
               >
-                {tab.label}
-              </span>
-            </Link>
-          );
-        })}
+                {active && (
+                  <motion.span
+                    layoutId="admin-tab"
+                    className="absolute inset-0 rounded-full bg-foreground"
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                )}
+                <span
+                  className={`relative z-10 transition-colors ${
+                    active ? "text-background" : "text-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

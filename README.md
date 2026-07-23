@@ -2,7 +2,7 @@
 
 A minimal, Apple/Google-style portfolio for a product designer.
 
-- **Home** — hero, project card grid, testimonials, footer
+- **Home** — hero, project card grid, testimonials, Spotlight, footer
 - **`/work/[slug]`** — per-project case study (hero + text/image blocks)
 - **`/play`** — an infinite, Miro-like canvas (tldraw): draw, move, add images at natural size
 - **`/admin`** — sign in to upload projects, edit case studies, reorder by drag, publish
@@ -23,8 +23,8 @@ persistence, connect Supabase:
 ## Supabase setup
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the **SQL Editor**, run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   This creates the tables, row-level security, storage buckets, and seeds sample content.
+2. In the **SQL Editor**, run the files in [`supabase/migrations`](supabase/migrations) in numerical order.
+   These create the tables, row-level security, storage buckets, and seed sample content.
 3. In **Authentication → Users**, add one admin user (email + password) — this is your login.
 4. Copy `.env.local.example` to `.env.local` and fill in your values:
 
@@ -40,6 +40,8 @@ persistence, connect Supabase:
 - **Projects** live in the `projects` table; `content` is an ordered JSON array of
   text/image/gallery blocks rendered on the case-study page.
 - **Images** upload to the `project-images` Supabase Storage bucket; public URLs are stored.
+- **Spotlight** photos and videos upload to `spotlight-media` and can be edited,
+  published, deleted, and reordered from `/admin/spotlight`.
 - **Play** loads a shared canvas snapshot (`play_canvas` table). Visitors can freely
   draw and move things; only a signed-in admin sees **Save canvas** to update the shared state.
 - Only published projects appear publicly (enforced by RLS); the admin sees drafts too.

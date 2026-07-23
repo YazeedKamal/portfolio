@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const links = [
@@ -19,6 +19,39 @@ function isActive(pathname: string, href: string) {
 export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   const pathname = usePathname();
   const [hovered, setHovered] = useState<string | null>(null);
+  const [spotlightMode, setSpotlightMode] = useState(false);
+
+  useEffect(() => {
+    let frame = 0;
+
+    function updateSpotlightMode() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const section = document.querySelector<HTMLElement>("#spotlight");
+        if (!section) {
+          setSpotlightMode(false);
+          return;
+        }
+
+        const bounds = section.getBoundingClientRect();
+        const transitionLine = window.innerHeight * 0.98;
+        setSpotlightMode(
+          bounds.top <= transitionLine && bounds.bottom > 0,
+        );
+      });
+    }
+
+    const initialFrame = requestAnimationFrame(updateSpotlightMode);
+    window.addEventListener("scroll", updateSpotlightMode, { passive: true });
+    window.addEventListener("resize", updateSpotlightMode);
+
+    return () => {
+      cancelAnimationFrame(initialFrame);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateSpotlightMode);
+      window.removeEventListener("resize", updateSpotlightMode);
+    };
+  }, [pathname]);
 
   // Hide the public navbar inside the admin area.
   if (pathname.startsWith("/admin")) return null;
@@ -30,7 +63,9 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="glass pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-4 pr-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+        className={`glass pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-4 pr-1.5 text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-[background-color,border-color,color] duration-500 ease-out motion-reduce:transition-none ${
+          spotlightMode ? "spotlight-nav" : ""
+        }`}
       >
         <Link
           href="/"

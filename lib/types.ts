@@ -24,6 +24,35 @@ export type Testimonial = {
   order_index: number;
 };
 
+export type SpotlightShape = "portrait" | "landscape" | "square" | "circle" | "polaroid";
+
+export type SpotlightPlacement = {
+  x: number;
+  y: number;
+  width: number;
+  rotation: number;
+  shape: SpotlightShape;
+};
+
+export type SpotlightLayout = {
+  desktop: SpotlightPlacement;
+  mobile: SpotlightPlacement;
+};
+
+export type SpotlightItem = {
+  id: string;
+  media_type: "image" | "video";
+  media_url: string;
+  title: string;
+  caption: string | null;
+  location: string | null;
+  taken_at: string | null;
+  order_index: number;
+  published: boolean;
+  layout: SpotlightLayout;
+  created_at: string;
+};
+
 export type PlayCanvas = {
   id: string;
   snapshot: unknown;
@@ -53,6 +82,15 @@ export type Database = {
         Row: Testimonial;
         Insert: Omit<Testimonial, "id"> & { id?: string };
         Update: Partial<Testimonial>;
+        Relationships: [];
+      };
+      spotlight_items: {
+        Row: SpotlightItem;
+        Insert: Omit<SpotlightItem, "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<SpotlightItem>;
         Relationships: [];
       };
       play_canvas: {

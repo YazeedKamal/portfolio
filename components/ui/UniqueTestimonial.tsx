@@ -58,7 +58,7 @@ export function UniqueTestimonial({ testimonials }: { testimonials: Testimonial[
       <div className="relative w-full max-w-3xl px-8 sm:px-14">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -left-1 -top-9 select-none font-serif text-7xl leading-none text-foreground/[0.06] sm:left-2 sm:text-8xl"
+          className="pointer-events-none absolute -left-1 -top-9 select-none font-serif text-7xl leading-none text-foreground/[0.06] transition-colors duration-500 ease-out motion-reduce:transition-none sm:left-2 sm:text-8xl"
         >
           &ldquo;
         </span>
@@ -75,7 +75,7 @@ export function UniqueTestimonial({ testimonials }: { testimonials: Testimonial[
 
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-12 -right-1 select-none font-serif text-7xl leading-none text-foreground/[0.06] sm:right-2 sm:text-8xl"
+          className="pointer-events-none absolute -bottom-12 -right-1 select-none font-serif text-7xl leading-none text-foreground/[0.06] transition-colors duration-500 ease-out motion-reduce:transition-none sm:right-2 sm:text-8xl"
         >
           &rdquo;
         </span>

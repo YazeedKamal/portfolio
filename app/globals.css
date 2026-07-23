@@ -118,6 +118,42 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+/* Spotlight flips the island with the two connected sections as soon as the
+   user reaches the end of Testimonials. */
+.spotlight-nav {
+  --foreground: #f5f5f5;
+  --background: #0a0a0b;
+  --border-strong: #36363a;
+  --glass: rgba(10, 10, 11, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.16);
+}
+
+.dark .spotlight-nav {
+  --foreground: #111111;
+  --background: #f3f0e9;
+  --border-strong: #c9c5bd;
+  --glass: rgba(243, 240, 233, 0.82);
+  --glass-border: rgba(0, 0, 0, 0.12);
+}
+
+/* Let the visible tail of Testimonials join Spotlight's color world so the
+   transition reads as one continuous page instead of two stacked panels. */
+#testimonials:has(+ #spotlight[data-mode="active"]) {
+  --background: #050506;
+  --foreground: #f5f5f5;
+  --muted-foreground: #a1a1aa;
+  --border: #1f1f1f;
+  --ring: #ffffff26;
+}
+
+.dark #testimonials:has(+ #spotlight[data-mode="active"]) {
+  --background: #f3f0e9;
+  --foreground: #111111;
+  --muted-foreground: #625f59;
+  --border: #d8d3c9;
+  --ring: #1111111f;
+}
+
 .text-balance {
   text-wrap: balance;
 }
