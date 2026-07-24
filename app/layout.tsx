@@ -23,8 +23,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   const settings = await getSiteSettings();
 
@@ -43,6 +45,7 @@ export default async function RootLayout({
         >
           <DynamicIsland avatarUrl={settings.avatar_url} />
           {children}
+          {modal}
         </ThemeProvider>
       </body>
     </html>

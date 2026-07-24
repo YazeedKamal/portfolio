@@ -1,16 +1,41 @@
 import { Reveal } from "@/components/ui/Reveal";
 import type { ContentBlock } from "@/lib/types";
 
-export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
+export function ContentBlocks({
+  blocks,
+  reveal = true,
+  padded = true,
+}: {
+  blocks: ContentBlock[];
+  /** Scroll-triggered fade-in. Disable inside the bottom sheet, where the
+   *  content scrolls in its own container and `whileInView` (window-based)
+   *  wouldn't fire for blocks below the fold. */
+  reveal?: boolean;
+  /** Own outer padding + centering. Disable in the sheet, which supplies its
+   *  own 24px padding and left-aligns the column under the hero. */
+  padded?: boolean;
+}) {
   if (!blocks?.length) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-16 px-6 py-20">
-      {blocks.map((block, i) => (
-        <Reveal key={i}>
-          <Block block={block} />
-        </Reveal>
-      ))}
+    <div
+      className={
+        padded
+          ? "mx-auto flex w-full max-w-3xl flex-col gap-16 px-6 py-20"
+          : "flex w-full flex-col gap-16 pt-10"
+      }
+    >
+      {blocks.map((block, i) =>
+        reveal ? (
+          <Reveal key={i}>
+            <Block block={block} />
+          </Reveal>
+        ) : (
+          <div key={i}>
+            <Block block={block} />
+          </div>
+        ),
+      )}
     </div>
   );
 }

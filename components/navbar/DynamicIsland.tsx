@@ -20,6 +20,20 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   const pathname = usePathname();
   const [hovered, setHovered] = useState<string | null>(null);
   const [spotlightMode, setSpotlightMode] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Slide the navbar up out of view while a project sheet is open.
+  useEffect(() => {
+    const el = document.documentElement;
+    const update = () => setSheetOpen(el.hasAttribute("data-sheet-open"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(el, {
+      attributes: true,
+      attributeFilter: ["data-sheet-open"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let frame = 0;
@@ -61,8 +75,8 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
       <motion.nav
         layout
         initial={{ y: -24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ y: sheetOpen ? -120 : 0, opacity: sheetOpen ? 0 : 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className={`glass pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-4 pr-1.5 text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-[background-color,border-color,color] duration-500 ease-out motion-reduce:transition-none ${
           spotlightMode ? "spotlight-nav" : ""
         }`}

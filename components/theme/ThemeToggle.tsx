@@ -18,7 +18,7 @@ export function ThemeToggle() {
       type="button"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="relative grid h-8 w-8 place-items-center rounded-full text-foreground/70 transition-colors hover:text-foreground hover:bg-foreground/5"
+      className="relative grid h-8 w-8 cursor-pointer place-items-center rounded-full text-foreground/70 transition-colors hover:text-foreground hover:bg-foreground/5"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
