@@ -182,7 +182,7 @@ export function Hero({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.05, ease }}
-        className="max-w-4xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
+        className="max-w-4xl whitespace-pre-line text-balance text-5xl font-semibold leading-[1.05] tracking-tight lg:text-7xl"
       >
         {renderTitle(title || DEFAULT_TITLE, highlight)}
       </motion.h1>

@@ -77,6 +77,14 @@ html {
   text-rendering: optimizeLegibility;
 }
 
+/* Placeholder for empty inline-editable fields in the project builder. */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Scattered hero cards intentionally hang off-screen — never allow
    horizontal scrolling because of them. */
 html,

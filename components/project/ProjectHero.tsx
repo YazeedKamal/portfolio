@@ -36,8 +36,16 @@ export function ProjectHero({
             : "mx-auto w-full max-w-5xl px-6 pt-32"
         }
       >
+        <h1
+          className={`max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl ${
+            inSheet ? "" : "mt-8"
+          }`}
+        >
+          {project.title}
+        </h1>
+
         {project.cover_url && (
-          <div className="overflow-hidden rounded-[2rem] border border-border bg-card">
+          <div className="mt-8 overflow-hidden rounded-[2rem] border border-border bg-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={project.cover_url}
@@ -45,15 +53,6 @@ export function ProjectHero({
               className="aspect-[16/9] w-full object-cover"
             />
           </div>
-        )}
-
-        <h1 className="mt-12 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-          {project.title}
-        </h1>
-        {project.subtitle && (
-          <p className="mt-5 max-w-2xl text-balance text-xl text-muted-foreground">
-            {project.subtitle}
-          </p>
         )}
       </header>
     </>

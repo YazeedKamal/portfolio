@@ -17,7 +17,16 @@ import { SheetReadyContext } from "./sheet-ready-context";
  * blurred, dimmed homepage shows behind and around the sheet. Closing plays a
  * slide-down + fade, then pops the intercepted route with `router.back()`.
  */
-export function ProjectSheet({ children }: { children: React.ReactNode }) {
+export function ProjectSheet({
+  children,
+  standalone = false,
+}: {
+  children: React.ReactNode;
+  /** True when rendered as a real page (direct load / refresh of
+   *  `/work/[slug]`) rather than intercepted over the homepage. Closing then
+   *  navigates home instead of popping history. */
+  standalone?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
   // Keep the sheet's scrollbar hidden until the real content (not the loading
@@ -73,7 +82,7 @@ export function ProjectSheet({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AnimatePresence onExitComplete={() => router.back()}>
+    <AnimatePresence onExitComplete={() => (standalone ? router.push("/") : router.back())}>
       {open && (
         <motion.div key="project-sheet" className="fixed inset-0 z-40">
           {/* Blurred backdrop over the homepage. Navbar (z-50) stays crisp

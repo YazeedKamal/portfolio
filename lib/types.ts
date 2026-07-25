@@ -1,5 +1,39 @@
+/** How a block/column aligns horizontally within the content column. */
+export type BlockAlign = "left" | "center" | "right";
+
+/** Media kind — gifs upload as image/gif and render as an <img> ("image"). */
+export type MediaKind = "image" | "video";
+
+export type Media = {
+  url: string;
+  kind: MediaKind;
+  caption?: string;
+};
+
+/** Inner content of one column in a multi-column section. */
+export type ColumnContent =
+  | { kind: "media"; media: Media }
+  | { kind: "text"; heading?: string; body: string };
+
+/** One column: a percentage width (of the row) + its content. */
+export type Column = { width: number; content: ColumnContent };
+
+/** A single fact/detail: an optional Lucide icon name + title + body. */
+export type InfoItem = { icon?: string; title: string; body: string };
+
 export type ContentBlock =
-  | { type: "text"; heading?: string; body: string }
+  // Centered/aligned rich text. `width` is a percent (20–100) of the column.
+  | { type: "text"; heading?: string; body: string; align?: BlockAlign; width?: number }
+  // A single image / video / gif. `width` is a percent (20–100) of the column.
+  | { type: "media"; media: Media; align?: BlockAlign; width?: number }
+  // Multi-column row (media + text, either order). Column widths are percents.
+  | { type: "columns"; columns: Column[] }
+  // A list of facts/details — each an optional icon + title + body. `columns`
+  // controls how many columns they lay out in on wide screens (1–4).
+  | { type: "info"; items: InfoItem[]; columns?: number }
+  // A thin horizontal divider line.
+  | { type: "divider" }
+  // ---- Legacy blocks (render-only, kept for already-saved projects) ----
   | { type: "image"; url: string; caption?: string; width?: number; height?: number }
   | { type: "gallery"; images: { url: string; caption?: string }[] };
 

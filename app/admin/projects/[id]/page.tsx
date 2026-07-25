@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { ProjectEditor } from "@/components/admin/ProjectEditor";
+import { ProjectBuilder } from "@/components/admin/ProjectBuilder";
 import type { Project } from "@/lib/types";
 
 export const revalidate = 0;
@@ -17,5 +17,5 @@ export default async function EditProjectPage({
   const { data } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
 
-  return <ProjectEditor project={data as Project} />;
+  return <ProjectBuilder project={data as Project} />;
 }
