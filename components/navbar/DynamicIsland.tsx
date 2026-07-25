@@ -71,7 +71,13 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   if (pathname.startsWith("/admin")) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <div
+      className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4"
+      // While the project sheet locks the page scroll it hides the scrollbar,
+      // widening the viewport. Offset the right side by that same width (0 when
+      // unlocked) so this centered island stays put instead of drifting.
+      style={{ paddingRight: "calc(1rem + var(--scrollbar-comp, 0px))" }}
+    >
       <motion.nav
         layout
         initial={{ y: -24, opacity: 0 }}

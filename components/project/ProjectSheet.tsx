@@ -41,8 +41,13 @@ export function ProjectSheet({
   // Esc to close + lock the page scroll behind the sheet while it's open.
   // Lock on <html> (the scroller) so the page scrollbar is hidden — not just
   // scroll-disabled — and pad the body by the scrollbar width so the blurred
-  // background doesn't shift. Restore the scroll position on close so going
-  // back doesn't jump the homepage to the top of the projects section.
+  // background doesn't shift. Also publish that width as `--scrollbar-comp` so
+  // the fixed, centered navbar can offset itself by the same amount — otherwise
+  // it drifts sideways when the scrollbar disappears (body padding only
+  // compensates the background, not fixed elements). The var is removed in the
+  // same cleanup that restores the scrollbar, so the two changes cancel out and
+  // the navbar never jumps. Restore the scroll position on close so going back
+  // doesn't jump the homepage to the top of the projects section.
   useEffect(() => {
     const scrollY = window.scrollY;
     const html = document.documentElement;
@@ -51,7 +56,10 @@ export function ProjectSheet({
     const prevHtmlOverflow = html.style.overflow;
     const prevBodyPadding = body.style.paddingRight;
     html.style.overflow = "hidden";
-    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+      html.style.setProperty("--scrollbar-comp", `${scrollbarWidth}px`);
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
@@ -62,6 +70,7 @@ export function ProjectSheet({
       document.removeEventListener("keydown", onKey);
       html.style.overflow = prevHtmlOverflow;
       body.style.paddingRight = prevBodyPadding;
+      html.style.removeProperty("--scrollbar-comp");
       // Run after the route transition so it wins over scroll restoration.
       requestAnimationFrame(() => window.scrollTo(0, scrollY));
     };
