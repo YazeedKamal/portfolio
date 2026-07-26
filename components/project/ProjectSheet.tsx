@@ -177,11 +177,21 @@ export function ProjectSheet({
               Full-screen on mobile; on desktop the navbar slides away so the
               top can sit near the top edge. */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 top-0 flex w-full flex-col overflow-hidden border border-border bg-background shadow-[0_-20px_60px_rgba(0,0,0,0.25)] sm:top-8 sm:rounded-t-[2rem]"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            className="absolute inset-x-0 bottom-0 top-0 flex w-full flex-col overflow-hidden border border-border bg-background sm:top-8 sm:rounded-t-[2rem]"
+            // The top shadow is animated (not a static class): it fades out fast
+            // on exit so it's gone before the panel finishes sliding off-screen —
+            // otherwise the shadow (which reaches ~80px above the panel) lingers
+            // at the bottom edge after the sheet is gone, then blinks away when
+            // the node unmounts.
+            initial={{ y: "100%", boxShadow: "0px 0px 0px rgba(0,0,0,0)" }}
+            animate={{ y: 0, boxShadow: "0px -20px 60px rgba(0,0,0,0.25)" }}
+            exit={{ y: "100%", boxShadow: "0px 0px 0px rgba(0,0,0,0)" }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 30,
+              boxShadow: { type: "tween", duration: 0.2, ease: "easeOut" },
+            }}
             // Disable dragging once closing: `dragSnapToOrigin` pulls the panel
             // back to y:0 while the exit animates it to y:100%, which stalls the
             // exit (it never completes, so onExitComplete never fires and the
@@ -216,7 +226,7 @@ export function ProjectSheet({
                 with 24px padding — full-width with 24px on mobile. The
                 scrollbar stays hidden until the real content is ready. */}
             <div
-              className={`min-h-0 flex-1 overscroll-contain ${
+              className={`min-h-0 flex-1 overscroll-contain [scrollbar-gutter:stable_both-edges] ${
                 contentReady ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >

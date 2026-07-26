@@ -89,15 +89,22 @@ export function ProjectPreviewSheet({
               mirrors the real desktop case study. */}
           <motion.div
             key={device}
-            className={`absolute bottom-0 top-8 flex flex-col overflow-hidden border border-border bg-background shadow-[0_-20px_60px_rgba(0,0,0,0.25)] ${
+            className={`absolute bottom-0 top-8 flex flex-col overflow-hidden border border-border bg-background ${
               isMobile
                 ? "inset-x-0 mx-auto w-full max-w-[390px] rounded-t-[2.5rem]"
                 : "inset-x-0 w-full rounded-t-[2rem]"
             }`}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            // Shadow is animated so it fades out fast on exit instead of
+            // lingering at the bottom edge after the panel slides off-screen.
+            initial={{ y: "100%", boxShadow: "0px 0px 0px rgba(0,0,0,0)" }}
+            animate={{ y: 0, boxShadow: "0px -20px 60px rgba(0,0,0,0.25)" }}
+            exit={{ y: "100%", boxShadow: "0px 0px 0px rgba(0,0,0,0)" }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 30,
+              boxShadow: { type: "tween", duration: 0.2, ease: "easeOut" },
+            }}
             drag="y"
             dragListener={false}
             dragControls={dragControls}
