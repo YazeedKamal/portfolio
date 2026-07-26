@@ -227,7 +227,7 @@ export function ProjectSheet({
                 scrollbar stays hidden until the real content is ready. */}
             <div
               className={`min-h-0 flex-1 overscroll-contain [scrollbar-gutter:stable_both-edges] ${
-                contentReady ? "overflow-y-auto" : "overflow-hidden"
+                contentReady ? "overflow-y-auto overflow-x-clip" : "overflow-hidden"
               }`}
             >
               <div className="mx-auto w-full max-w-4xl p-6">

@@ -243,16 +243,10 @@ export function HomeShowcase({
         <Reveal>
           <div className="mb-12 flex items-end justify-between">
             <div>
-              <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-                Selected work
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 Projects
               </h2>
             </div>
-            <p className="hidden max-w-xs text-right text-sm text-muted-foreground sm:block">
-              A handful of things I&apos;m proud of. Tap any to read the story.
-            </p>
           </div>
         </Reveal>
 

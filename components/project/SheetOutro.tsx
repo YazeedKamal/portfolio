@@ -26,22 +26,23 @@ export function SheetOutro({
   projects: Project[];
   interactive?: boolean;
 }) {
+  // Show at most 3 in the "More projects" grid.
+  const shown = projects.slice(0, 3);
   return (
     <section className="@container mt-20">
-      {/* Full-width divider splitting the case study from the outro. `-mx-6`
-          cancels the sheet's 24px content padding so the line runs edge-to-edge
-          across the sheet's content column. */}
-      <div className="-mx-6 border-t border-border" />
+      {/* Divider splitting the case study from the outro. Full-bleed to the
+          whole sheet width (not just the centered content column): `w-screen`
+          + the left-1/2 / -translate-x-1/2 trick breaks out of the max-w-4xl
+          column. The scroll container clips the horizontal overflow so this
+          never adds a horizontal scrollbar. */}
+      <div className="relative left-1/2 w-screen -translate-x-1/2 border-t border-border" />
 
       <div className="pt-20">
-      {projects.length > 0 && (
+      {shown.length > 0 && (
         <div className="mb-16">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                Keep exploring
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 More projects
               </h2>
             </div>
@@ -56,8 +57,8 @@ export function SheetOutro({
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-5 @lg:grid-cols-2">
-            {projects.map((project) => (
+          <div className="grid grid-cols-2 gap-3 @md:grid-cols-3 @md:gap-4">
+            {shown.map((project) => (
               <OutroCard key={project.id} project={project} interactive={interactive} />
             ))}
           </div>
