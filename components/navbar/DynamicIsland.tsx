@@ -94,7 +94,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
           <span className="grid h-6 w-6 place-items-center overflow-hidden rounded-full bg-foreground text-[11px] font-bold text-background">
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+              <img src={avatarUrl} alt="Profile" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             ) : (
               "Y"
             )}

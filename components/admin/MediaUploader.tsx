@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import type { Media } from "@/lib/types";
 
 const ACCEPT =
@@ -46,12 +47,13 @@ export function MediaUploader({
     setBusy(true);
     setError(null);
     try {
+      const upload = kind === "video" ? file : await compressImage(file);
       const supabase = createClient();
-      const ext = file.name.split(".").pop()?.toLowerCase() || (kind === "video" ? "mp4" : "jpg");
+      const ext = upload.name.split(".").pop()?.toLowerCase() || (kind === "video" ? "mp4" : "jpg");
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("project-images")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, upload, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
 
       const { data } = supabase.storage.from("project-images").getPublicUrl(path);

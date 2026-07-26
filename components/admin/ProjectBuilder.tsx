@@ -508,7 +508,13 @@ function BlockEditor({
         onChange={(width) => onChange({ ...block, width })}
         className={alignClasses(block.align ?? "center").box}
       >
-        <InlineMedia media={block.media} onChange={(media) => onChange({ ...block, media })} />
+        <InlineMedia
+          media={block.media}
+          onChange={(media) => onChange({ ...block, media })}
+          aspect={block.aspect}
+          onAspectChange={(aspect) => onChange({ ...block, aspect })}
+          selected={selected}
+        />
       </ResizableWidth>
     );
   }
@@ -628,8 +634,23 @@ function ColumnsEditor({
             {col.content.kind === "media" ? (
               <InlineMedia
                 media={col.content.media}
-                onChange={(media) => setContent(i, { kind: "media", media })}
-                aspect="aspect-[4/3]"
+                onChange={(media) =>
+                  setContent(i, {
+                    kind: "media",
+                    media,
+                    aspect: col.content.kind === "media" ? col.content.aspect : undefined,
+                  })
+                }
+                aspect={col.content.aspect}
+                onAspectChange={(aspect) =>
+                  setContent(i, {
+                    kind: "media",
+                    media: col.content.kind === "media" ? col.content.media : emptyMedia(),
+                    aspect,
+                  })
+                }
+                selected={selected}
+                placeholderAspect="aspect-[4/3]"
               />
             ) : (
               <div>
@@ -909,13 +930,22 @@ function InlineText({
 function InlineMedia({
   media,
   onChange,
-  aspect = "aspect-[16/9]",
+  aspect,
+  onAspectChange,
+  selected = false,
+  placeholderAspect = "aspect-[16/9]",
 }: {
   media: Media;
   onChange: (m: Media) => void;
+  /** CSS aspect-ratio (e.g. "1600 / 900") set by the resize handles; when
+   *  undefined the media keeps its natural height. */
   aspect?: string;
+  onAspectChange?: (a: string) => void;
+  selected?: boolean;
+  placeholderAspect?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -932,15 +962,43 @@ function InlineMedia({
     }
   }
 
+  // An embed (HTML animation) has no natural height, so it always needs an
+  // aspect-ratio — default to 16:9 until the user drags the height handle.
+  const effectiveAspect = aspect ?? (media.kind === "embed" ? "16 / 9" : undefined);
+  const fill = effectiveAspect ? "h-full " : "";
+  // Embeds carry inline `html` (no upload) instead of a `url`.
+  const hasMedia = !!(media.url || media.html);
+
   return (
     <figure className="w-full">
-      {media.url ? (
-        <div className="group/m relative overflow-hidden rounded-3xl border border-border bg-card">
-          {media.kind === "video" ? (
-            <video src={media.url} muted loop autoPlay playsInline className="w-full object-cover" />
+      {hasMedia ? (
+        <div
+          ref={frameRef}
+          className="group/m relative overflow-hidden rounded-3xl border border-border bg-card"
+          style={effectiveAspect ? { aspectRatio: effectiveAspect } : undefined}
+        >
+          {media.kind === "embed" ? (
+            // `pointer-events-none` so clicking the frame selects the block
+            // instead of the animation swallowing the click; Replace overlay wins.
+            // Inline `srcDoc` renders live HTML; `src` is a fallback for older embeds.
+            <iframe
+              {...(media.html ? { srcDoc: media.html } : { src: media.url })}
+              title={media.caption ?? "Animation"}
+              sandbox="allow-scripts allow-pointer-lock"
+              className={`pointer-events-none ${fill}w-full`}
+            />
+          ) : media.kind === "video" ? (
+            <video
+              src={media.url}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className={`${fill}w-full object-cover`}
+            />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={media.url} alt="" className="w-full object-cover" />
+            <img src={media.url} alt="" className={`${fill}w-full object-cover`} />
           )}
           <button
             type="button"
@@ -952,13 +1010,14 @@ function InlineMedia({
               Replace
             </span>
           </button>
+          {selected && onAspectChange && <HeightHandle frameRef={frameRef} onChange={onAspectChange} />}
         </div>
       ) : (
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className={`grid ${aspect} w-full cursor-pointer place-items-center rounded-3xl border border-dashed border-border bg-background text-muted-foreground transition-colors hover:bg-foreground/5`}
+          className={`grid ${placeholderAspect} w-full cursor-pointer place-items-center rounded-3xl border border-dashed border-border bg-background text-muted-foreground transition-colors hover:bg-foreground/5`}
         >
           <span className="flex flex-col items-center gap-2 text-sm">
             {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImageIcon className="h-6 w-6" />}
@@ -977,7 +1036,7 @@ function InlineMedia({
           e.target.value = "";
         }}
       />
-      {media.url && (
+      {hasMedia && (
         <InlineText
           value={media.caption ?? ""}
           onChange={(caption) => onChange({ ...media, caption })}
@@ -1112,6 +1171,46 @@ function ResizableWidth({
       )}
       {children}
     </div>
+  );
+}
+
+/** A drag handle on the bottom edge of a media / embed frame. Dragging it sets
+ *  the frame's height by writing a responsive CSS aspect-ratio (`width / height`
+ *  in px — a pure ratio, so the frame still scales with the column). Pairs with
+ *  the left/right width handles on `ResizableWidth`. */
+function HeightHandle({
+  frameRef,
+  onChange,
+}: {
+  frameRef: React.RefObject<HTMLElement | null>;
+  onChange: (aspect: string) => void;
+}) {
+  const start = (e: ReactPointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = frameRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const w = rect.width;
+    const startH = rect.height;
+    const startY = e.clientY;
+    const onMove = (ev: PointerEvent) => {
+      const h = Math.max(60, startH + (ev.clientY - startY));
+      onChange(`${Math.round(w)} / ${Math.round(h)}`);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", up);
+  };
+
+  return (
+    <div
+      onPointerDown={start}
+      className="absolute bottom-1.5 left-1/2 z-10 h-1.5 w-12 -translate-x-1/2 cursor-row-resize rounded-full bg-[#0D99FF]"
+    />
   );
 }
 

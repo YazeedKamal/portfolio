@@ -47,6 +47,8 @@ export function ProjectCard({
             <img
               src={project.cover_url}
               alt={project.title}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (

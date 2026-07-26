@@ -37,7 +37,7 @@ export function ProjectHero({
         }
       >
         <h1
-          className={`max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl ${
+          className={`max-w-3xl text-balance text-[22px] font-semibold leading-tight tracking-tight sm:text-2xl ${
             inSheet ? "" : "mt-8"
           }`}
         >
@@ -50,6 +50,8 @@ export function ProjectHero({
             <img
               src={project.cover_url}
               alt={project.title}
+              fetchPriority="high"
+              decoding="async"
               className="aspect-[16/9] w-full object-cover"
             />
           </div>

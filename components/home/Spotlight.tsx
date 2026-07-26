@@ -8,6 +8,7 @@ import {
   useScroll,
 } from "framer-motion";
 import { Camera, Play } from "lucide-react";
+import { usePlayInView } from "@/lib/use-play-in-view";
 import type {
   SpotlightItem,
   SpotlightPlacement,
@@ -39,6 +40,7 @@ function SpotlightMedia({
 }) {
   const reduceMotion = useReducedMotion();
   const isPolaroid = placement.shape === "polaroid";
+  const videoRef = usePlayInView<HTMLVideoElement>();
 
   return (
     <motion.article
@@ -71,11 +73,12 @@ function SpotlightMedia({
         {item.media_type === "video" ? (
           <>
             <video
+              ref={videoRef}
               src={item.media_url}
-              autoPlay
               muted
               loop
               playsInline
+              preload="metadata"
               className="h-full w-full object-cover"
             />
             <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/45 text-white backdrop-blur sm:right-3 sm:top-3 sm:h-9 sm:w-9">
@@ -87,6 +90,8 @@ function SpotlightMedia({
           <img
             src={item.media_url}
             alt={item.title || "A memory from Yazeed's Spotlight"}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         )}
@@ -244,6 +249,8 @@ function CenterContent({
             <img
               src={avatarUrl}
               alt="Yazeed Kamal"
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (

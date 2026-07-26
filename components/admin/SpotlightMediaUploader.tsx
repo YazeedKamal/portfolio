@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 
 type MediaValue = { url: string; type: "image" | "video" } | null;
 
@@ -31,12 +32,13 @@ export function SpotlightMediaUploader({
     setBusy(true);
     setError(null);
     try {
+      const upload = type === "video" ? file : await compressImage(file);
       const supabase = createClient();
-      const ext = file.name.split(".").pop()?.toLowerCase() || (type === "video" ? "mp4" : "jpg");
+      const ext = upload.name.split(".").pop()?.toLowerCase() || (type === "video" ? "mp4" : "jpg");
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("spotlight-media")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, upload, { cacheControl: "3600", upsert: false });
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from("spotlight-media").getPublicUrl(path);

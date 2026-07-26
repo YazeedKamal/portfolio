@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 
 /**
  * Uploads an image to the `project-images` bucket and returns its public URL.
@@ -29,12 +30,13 @@ export function ImageUploader({
     setBusy(true);
     setError(null);
     try {
+      const upload = await compressImage(file);
       const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "png";
+      const ext = upload.name.split(".").pop() ?? "png";
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from(bucket)
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, upload, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);

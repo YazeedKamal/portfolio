@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/ui/Reveal";
+import { AutoVideo } from "@/components/ui/AutoVideo";
 import { BlockIcon } from "@/components/icon-library";
 import { infoColsClass } from "@/lib/info-columns";
 import type { BlockAlign, ColumnContent, ContentBlock, Media } from "@/lib/types";
@@ -53,22 +54,38 @@ function alignClasses(align: BlockAlign | undefined) {
   };
 }
 
-function MediaView({ media }: { media: Media }) {
+function MediaView({ media, aspect }: { media: Media; aspect?: string }) {
+  // An embed (HTML animation) has no natural height, so it always needs an
+  // aspect-ratio — fall back to 16:9 when the user hasn't resized it.
+  const effectiveAspect = aspect ?? (media.kind === "embed" ? "16 / 9" : undefined);
+  const fill = effectiveAspect ? "h-full " : "";
   return (
     <figure className="w-full">
-      <div className="overflow-hidden rounded-3xl border border-border bg-card">
-        {media.kind === "video" ? (
-          <video
-            src={media.url}
-            muted
-            loop
-            autoPlay
-            playsInline
-            className="w-full object-cover"
+      <div
+        className="overflow-hidden rounded-3xl border border-border bg-card"
+        style={effectiveAspect ? { aspectRatio: effectiveAspect } : undefined}
+      >
+        {media.kind === "embed" ? (
+          <iframe
+            // Inline `srcDoc` renders the markup as live HTML; `src` is only a
+            // fallback for older embeds saved as a URL.
+            {...(media.html ? { srcDoc: media.html } : { src: media.url })}
+            title={media.caption ?? "Animation"}
+            loading="lazy"
+            sandbox="allow-scripts allow-pointer-lock"
+            className={`${fill}w-full`}
           />
+        ) : media.kind === "video" ? (
+          <AutoVideo src={media.url} className={`${fill}w-full object-cover`} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={media.url} alt={media.caption ?? ""} className="w-full object-cover" />
+          <img
+            src={media.url}
+            alt={media.caption ?? ""}
+            loading="lazy"
+            decoding="async"
+            className={`${fill}w-full object-cover`}
+          />
         )}
       </div>
       {media.caption && (
@@ -84,9 +101,9 @@ function TextView({ heading, body }: { heading?: string; body: string }) {
   return (
     <div>
       {heading && (
-        <h2 className="mb-3 text-2xl font-semibold tracking-tight">{heading}</h2>
+        <h2 className="mb-3 text-base font-semibold tracking-tight sm:text-lg">{heading}</h2>
       )}
-      <p className="whitespace-pre-line text-lg leading-relaxed text-foreground/80">
+      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base">
         {body}
       </p>
     </div>
@@ -95,7 +112,7 @@ function TextView({ heading, body }: { heading?: string; body: string }) {
 
 function ColumnContentView({ content }: { content: ColumnContent }) {
   return content.kind === "media" ? (
-    <MediaView media={content.media} />
+    <MediaView media={content.media} aspect={content.aspect} />
   ) : (
     <TextView heading={content.heading} body={content.body} />
   );
@@ -110,9 +127,9 @@ export function BlockView({ block }: { block: ContentBlock }) {
       return (
         <div className={`${box} ${text}`} style={{ width: `${block.width ?? 100}%` }}>
           {block.heading && (
-            <h2 className="mb-4 text-2xl font-semibold tracking-tight">{block.heading}</h2>
+            <h2 className="mb-4 text-base font-semibold tracking-tight sm:text-lg">{block.heading}</h2>
           )}
-          <p className="whitespace-pre-line text-lg leading-relaxed text-foreground/80">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base">
             {block.body}
           </p>
         </div>
@@ -123,7 +140,7 @@ export function BlockView({ block }: { block: ContentBlock }) {
       const { box } = alignClasses(block.align);
       return (
         <div className={box} style={{ width: `${block.width ?? 100}%` }}>
-          <MediaView media={block.media} />
+          <MediaView media={block.media} aspect={block.aspect} />
         </div>
       );
     }
@@ -153,10 +170,10 @@ export function BlockView({ block }: { block: ContentBlock }) {
             <div key={i}>
               <dt className="flex items-center gap-2">
                 <BlockIcon name={item.icon} className="h-5 w-5 shrink-0 text-foreground/70" />
-                <span className="text-lg font-semibold tracking-tight">{item.title}</span>
+                <span className="text-base font-semibold tracking-tight sm:text-lg">{item.title}</span>
               </dt>
               {item.body && (
-                <dd className="mt-1 whitespace-pre-line leading-relaxed text-foreground/70">
+                <dd className="mt-1 whitespace-pre-line text-sm leading-relaxed text-foreground/70 sm:text-base">
                   {item.body}
                 </dd>
               )}
@@ -177,6 +194,8 @@ export function BlockView({ block }: { block: ContentBlock }) {
             <img
               src={block.url}
               alt={block.caption ?? ""}
+              loading="lazy"
+              decoding="async"
               className="w-full"
               style={
                 block.width && block.height
@@ -199,7 +218,13 @@ export function BlockView({ block }: { block: ContentBlock }) {
           {block.images.map((img, i) => (
             <figure key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt={img.caption ?? ""} className="w-full object-cover" />
+              <img
+                src={img.url}
+                alt={img.caption ?? ""}
+                loading="lazy"
+                decoding="async"
+                className="w-full object-cover"
+              />
               {img.caption && (
                 <figcaption className="px-3 py-2 text-xs text-muted-foreground">
                   {img.caption}
