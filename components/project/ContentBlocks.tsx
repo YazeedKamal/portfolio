@@ -147,7 +147,7 @@ export function BlockView({ block }: { block: ContentBlock }) {
 
     case "columns":
       return (
-        <div className="flex flex-col gap-6 @2xl:flex-row @2xl:items-center @2xl:gap-8">
+        <div className="flex flex-col gap-6 @2xl:flex-row @2xl:items-start @2xl:gap-8">
           {block.columns.map((col, ci) => (
             <div
               key={ci}
