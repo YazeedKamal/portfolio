@@ -12,6 +12,7 @@ export const sampleProjects: Project[] = [
     subtitle: "A calm, trustworthy mobile banking experience.",
     cover_url:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80",
+    card_url: null,
     order_index: 0,
     published: true,
     created_at: new Date(0).toISOString(),
@@ -40,6 +41,7 @@ export const sampleProjects: Project[] = [
     subtitle: "Scalable design language for a fast-growing product suite.",
     cover_url:
       "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1600&q=80",
+    card_url: null,
     order_index: 1,
     published: true,
     created_at: new Date(0).toISOString(),
@@ -63,6 +65,7 @@ export const sampleProjects: Project[] = [
     subtitle: "Planning trips should feel like the trip itself.",
     cover_url:
       "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&q=80",
+    card_url: null,
     order_index: 2,
     published: true,
     created_at: new Date(0).toISOString(),

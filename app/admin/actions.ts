@@ -108,6 +108,7 @@ export async function createProject() {
       title: "Untitled project",
       subtitle: "",
       cover_url: null,
+      card_url: null,
       order_index: minOrder - 1,
       published: false,
       content: [],
@@ -128,6 +129,7 @@ export async function updateProject(
     subtitle: string;
     slug: string;
     cover_url: string | null;
+    card_url: string | null;
     content: ContentBlock[];
     published: boolean;
   },
@@ -140,6 +142,7 @@ export async function updateProject(
       subtitle: payload.subtitle,
       slug: slugify(payload.slug || payload.title) || `project-${id.slice(0, 6)}`,
       cover_url: payload.cover_url,
+      card_url: payload.card_url,
       content: payload.content,
       published: payload.published,
     })

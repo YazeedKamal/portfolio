@@ -51,6 +51,9 @@ export type Project = {
   title: string;
   subtitle: string | null;
   cover_url: string | null;
+  /** Optional custom thumbnail for the homepage card. Falls back to
+   *  `cover_url` (the internal hero image) when null. */
+  card_url: string | null;
   order_index: number;
   published: boolean;
   content: ContentBlock[];

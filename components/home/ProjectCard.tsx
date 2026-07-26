@@ -27,6 +27,8 @@ export function ProjectCard({
   hoverTilt?: boolean;
 }) {
   const tilt = HOVER_TILTS[index % HOVER_TILTS.length];
+  // Prefer the custom card thumbnail; fall back to the internal hero image.
+  const thumb = project.card_url ?? project.cover_url;
 
   const card = (
     <Link href={`/work/${project.slug}`} className="group block">
@@ -42,10 +44,10 @@ export function ProjectCard({
         }`}
       >
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-border bg-card">
-          {project.cover_url ? (
+          {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={project.cover_url}
+              src={thumb}
               alt={project.title}
               loading="lazy"
               decoding="async"

@@ -128,6 +128,7 @@ export function ProjectBuilder({
   const router = useRouter();
   const [title, setTitle] = useState(project.title);
   const [cover, setCover] = useState<string | null>(project.cover_url);
+  const [cardUrl, setCardUrl] = useState<string | null>(project.card_url);
   const [published, setPublished] = useState(project.published);
   const [items, setItems] = useState<Item[]>(() =>
     (project.content ?? []).map((block) => ({ id: uid(), block })),
@@ -231,6 +232,7 @@ export function ProjectBuilder({
         subtitle: project.subtitle ?? "", // preserved; not editable here
         slug: project.slug,
         cover_url: cover,
+        card_url: cardUrl,
         content: items.map((it) => it.block),
         published,
       });
@@ -349,6 +351,8 @@ export function ProjectBuilder({
 
           {/* Right panel — component picker (click or drag onto the canvas) */}
           <aside className="w-[260px] shrink-0 overflow-auto border-l border-border p-4">
+            <CardThumbnail value={cardUrl} cover={cover} onChange={setCardUrl} />
+
             <p className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
               Add section
             </p>
@@ -380,6 +384,7 @@ export function ProjectBuilder({
           ...project,
           title,
           cover_url: cover,
+          card_url: cardUrl,
           published,
           content: items.map((it) => it.block),
         }}
@@ -419,6 +424,91 @@ function CanvasHero({
           label="hero image"
         />
       </div>
+    </div>
+  );
+}
+
+/* ============================ Card thumbnail ============================= */
+
+/** Sidebar uploader for the homepage card image. When empty the card reuses
+ *  the hero `cover` — so this only needs setting when you want a different
+ *  thumbnail than the internal cover. */
+function CardThumbnail({
+  value,
+  cover,
+  onChange,
+}: {
+  value: string | null;
+  cover: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const preview = value ?? cover;
+  const usingFallback = !value;
+
+  async function handleFile(file: File) {
+    setBusy(true);
+    try {
+      const { url } = await uploadMedia(file);
+      onChange(url);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mb-6">
+      <p className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+        Card thumbnail
+      </p>
+      <div className="group/thumb relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-card">
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={preview} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">
+            No image
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="absolute inset-0 grid cursor-pointer place-items-center bg-black/45 text-xs font-medium text-white opacity-0 transition-opacity group-hover/thumb:opacity-100"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {preview ? "Replace" : "Upload"}
+          </span>
+        </button>
+      </div>
+      <div className="mt-2 flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {usingFallback ? "Using cover image" : "Custom image"}
+        </p>
+        {!usingFallback && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="inline-flex cursor-pointer items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+            Reset
+          </button>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={MEDIA_ACCEPT}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }
