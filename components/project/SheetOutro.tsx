@@ -1,6 +1,10 @@
+"use client";
+
+import { useContext } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Mail } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { SheetCloseContext } from "./sheet-close-context";
 
 /** Ways to reach me — mirrors the homepage footer so contact info stays in one
  *  voice across the site. Swap these for the real handles. */
@@ -46,15 +50,7 @@ export function SheetOutro({
                 More projects
               </h2>
             </div>
-            {interactive && (
-              <Link
-                href="/#work"
-                className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground sm:inline-flex"
-              >
-                View all
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            )}
+            {interactive && <ViewAllLink />}
           </div>
 
           <div className="grid grid-cols-2 gap-3 @md:grid-cols-3 @md:gap-4">
@@ -111,6 +107,34 @@ export function SheetOutro({
       </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * "View all" pill. Inside the routed bottom sheet it dismisses the sheet (with
+ * its slide-down animation) and lands the homepage on the projects section.
+ * When rendered outside the sheet (the full-page /work route, where no close
+ * context exists) it falls back to a plain link to `/#work`.
+ */
+function ViewAllLink() {
+  const closeTo = useContext(SheetCloseContext);
+  const className =
+    "hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground sm:inline-flex";
+
+  if (!closeTo) {
+    return (
+      <Link href="/#work" className={className}>
+        View all
+        <ArrowUpRight className="h-4 w-4" />
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={() => closeTo("work")} className={className}>
+      View all
+      <ArrowUpRight className="h-4 w-4" />
+    </button>
   );
 }
 

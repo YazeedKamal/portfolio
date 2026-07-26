@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { X } from "lucide-react";
 import { SheetReadyContext } from "./sheet-ready-context";
+import { SheetCloseContext } from "./sheet-close-context";
 
 // True while a close is unwinding the /work history chain. The sheet remounts on
 // every /work→/work navigation, so as `dismiss` steps back through the chain a
@@ -43,6 +44,11 @@ export function ProjectSheet({
   const [contentReady, setContentReady] = useState(false);
   const markReady = useCallback(() => setContentReady(true), []);
   const dragControls = useDragControls();
+  // When set, the homepage scrolls to this element id after the sheet dismisses
+  // (instead of restoring the scroll position the sheet was opened at). Used by
+  // the outro's "View all" to land on the projects section. Read in the
+  // scroll-lock cleanup below.
+  const scrollTargetRef = useRef<string | null>(null);
 
   // Dismiss the sheet, unwinding EVERY project the user hopped through via the
   // "More projects" cards in one go, back to the page it was opened over. Each
@@ -136,7 +142,15 @@ export function ProjectSheet({
       body.style.paddingRight = prevBodyPadding;
       html.style.removeProperty("--scrollbar-comp");
       // Run after the route transition so it wins over scroll restoration.
-      requestAnimationFrame(() => window.scrollTo(0, scrollY));
+      // If a scroll target was requested (e.g. "View all" → projects section),
+      // jump there instead of restoring the sheet's original scroll position.
+      const targetId = scrollTargetRef.current;
+      scrollTargetRef.current = null;
+      requestAnimationFrame(() => {
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (target) target.scrollIntoView({ block: "start" });
+        else window.scrollTo(0, scrollY);
+      });
     };
     // `open` intentionally read at mount only — see the guard comment above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,6 +164,16 @@ export function ProjectSheet({
     else el.removeAttribute("data-sheet-open");
     return () => el.removeAttribute("data-sheet-open");
   }, [open]);
+
+  // Dismiss the sheet with its slide-down animation, then land the homepage on
+  // `targetId` (e.g. the projects section) instead of the original scroll spot.
+  const closeTo = useCallback(
+    (targetId?: string) => {
+      if (targetId) scrollTargetRef.current = targetId;
+      close();
+    },
+    [close],
+  );
 
   const onDragEnd = (_e: unknown, info: PanInfo) => {
     // Fling or drag far enough down → dismiss.
@@ -231,9 +255,11 @@ export function ProjectSheet({
               }`}
             >
               <div className="mx-auto w-full max-w-4xl p-6">
-                <SheetReadyContext.Provider value={markReady}>
-                  {children}
-                </SheetReadyContext.Provider>
+                <SheetCloseContext.Provider value={closeTo}>
+                  <SheetReadyContext.Provider value={markReady}>
+                    {children}
+                  </SheetReadyContext.Provider>
+                </SheetCloseContext.Provider>
               </div>
             </div>
           </motion.div>
