@@ -5,7 +5,8 @@ import { ContentBlocks } from "@/components/project/ContentBlocks";
 import { ProjectSheet } from "@/components/project/ProjectSheet";
 import { ProjectSheetSkeleton } from "@/components/project/ProjectSheetSkeleton";
 import { SheetContentReady } from "@/components/project/SheetContentReady";
-import { getProjectBySlug } from "@/lib/data";
+import { SheetOutro } from "@/components/project/SheetOutro";
+import { getOtherProjects, getProjectBySlug } from "@/lib/data";
 
 export const revalidate = 0;
 
@@ -35,7 +36,10 @@ export default async function ProjectModal({
 }
 
 async function ProjectSheetContent({ slug }: { slug: string }) {
-  const project = await getProjectBySlug(slug);
+  const [project, others] = await Promise.all([
+    getProjectBySlug(slug),
+    getOtherProjects(slug),
+  ]);
 
   if (!project) notFound();
 
@@ -43,6 +47,7 @@ async function ProjectSheetContent({ slug }: { slug: string }) {
     <>
       <ProjectHero project={project} variant="sheet" />
       <ContentBlocks blocks={project.content ?? []} reveal={false} padded={false} />
+      <SheetOutro projects={others} />
       <SheetContentReady />
     </>
   );

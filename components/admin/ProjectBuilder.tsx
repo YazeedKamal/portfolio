@@ -39,6 +39,7 @@ import {
   ChevronDown,
   Columns2,
   Copy,
+  Eye,
   GripVertical,
   Image as ImageIcon,
   Info,
@@ -55,6 +56,7 @@ import {
   X,
 } from "lucide-react";
 import { updateProject } from "@/app/admin/actions";
+import { ProjectPreviewSheet } from "@/components/admin/ProjectPreviewSheet";
 import { MEDIA_ACCEPT, uploadMedia } from "@/lib/upload-media";
 import { INFO_MAX_COLUMNS, infoColsClass } from "@/lib/info-columns";
 import { ICON_LIBRARY, ICON_NAMES } from "@/components/icon-library";
@@ -116,7 +118,13 @@ const PALETTE: PaletteEntry[] = [
 
 /* ================================ Builder ================================= */
 
-export function ProjectBuilder({ project }: { project: Project }) {
+export function ProjectBuilder({
+  project,
+  otherProjects = [],
+}: {
+  project: Project;
+  otherProjects?: Project[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(project.title);
   const [cover, setCover] = useState<string | null>(project.cover_url);
@@ -126,6 +134,7 @@ export function ProjectBuilder({ project }: { project: Project }) {
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>("web");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -248,6 +257,14 @@ export function ProjectBuilder({ project }: { project: Project }) {
         </Link>
         <div className="flex items-center gap-3">
           <DeviceToggle device={device} onChange={setDevice} />
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-foreground/5"
+          >
+            <Eye className="h-4 w-4" />
+            Preview
+          </button>
           <label className="flex cursor-pointer items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -351,6 +368,22 @@ export function ProjectBuilder({ project }: { project: Project }) {
           {dragKind ? <PaletteChip entry={PALETTE.find((p) => p.kind === dragKind)!} /> : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Live preview of the unsaved in-memory build, in the real bottom sheet. */}
+      <ProjectPreviewSheet
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        device={device}
+        onDeviceChange={setDevice}
+        otherProjects={otherProjects}
+        project={{
+          ...project,
+          title,
+          cover_url: cover,
+          published,
+          content: items.map((it) => it.block),
+        }}
+      />
     </div>
   );
 }

@@ -18,6 +18,16 @@ export async function getPublishedProjects(): Promise<Project[]> {
   return data as Project[];
 }
 
+/** Other published projects to surface at the end of a case study — the whole
+ *  published set minus the one being viewed, capped at `limit`. */
+export async function getOtherProjects(
+  currentSlug: string,
+  limit = 4,
+): Promise<Project[]> {
+  const all = await getPublishedProjects();
+  return all.filter((p) => p.slug !== currentSlug).slice(0, limit);
+}
+
 /** A single published project by slug (null if not found). */
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   if (!isSupabaseConfigured) {

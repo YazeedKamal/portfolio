@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AnimatePresence,
@@ -15,17 +15,16 @@ import { SheetReadyContext } from "./sheet-ready-context";
  * Bottom sheet that renders a project case study as an overlay above the
  * homepage (via an intercepting route). The navbar stays visible on top; the
  * blurred, dimmed homepage shows behind and around the sheet. Closing plays a
- * slide-down + fade, then pops the intercepted route with `router.back()`.
+ * slide-down + fade, then dismisses back to the page the sheet was opened over —
+ * unwinding every project the user hopped through via the "More projects" cards
+ * in one go (see `dismiss`), so it never replays the previously opened sheets.
+ * Browser Back still walks project-to-project, since each hop pushed its own
+ * history entry.
  */
 export function ProjectSheet({
   children,
-  standalone = false,
 }: {
   children: React.ReactNode;
-  /** True when rendered as a real page (direct load / refresh of
-   *  `/work/[slug]`) rather than intercepted over the homepage. Closing then
-   *  navigates home instead of popping history. */
-  standalone?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
@@ -36,7 +35,48 @@ export function ProjectSheet({
   const markReady = useCallback(() => setContentReady(true), []);
   const dragControls = useDragControls();
 
-  const close = useCallback(() => setOpen(false), []);
+  // Dismiss the sheet, unwinding EVERY project the user hopped through via the
+  // "More projects" cards in one go, back to the page it was opened over. Each
+  // hop pushed a history entry (so browser Back walks project-to-project), and
+  // `router.back()` is the only reliable way to pop an intercepted-route modal
+  // (a forward `router.replace("/")` clears the slot but leaves the URL stuck).
+  // So we step back repeatedly — awaiting each popstate — until we're off the
+  // `/work` chain. The sheet is already hidden (`open` is false) throughout, so
+  // none of the intermediate projects flash. Guarded to run once per close.
+  const dismissedRef = useRef(false);
+  const dismiss = useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    const step = () => {
+      if (!window.location.pathname.startsWith("/work/")) return;
+      const onPop = () => {
+        window.removeEventListener("popstate", onPop);
+        // Let the router settle the new URL before checking/stepping again.
+        window.setTimeout(step, 30);
+      };
+      window.addEventListener("popstate", onPop);
+      router.back();
+    };
+    step();
+  }, [router]);
+
+  // Reset the one-shot dismiss guard whenever the sheet is (re)opened — the
+  // intercepting-route slot can reuse this component instance across
+  // close→reopen, which would otherwise leave `dismissedRef` stuck at true and
+  // make the next close a no-op.
+  useEffect(() => {
+    if (open) dismissedRef.current = false;
+  }, [open]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    // The slide-down exit animation normally drives the dismissal via
+    // AnimatePresence's onExitComplete. But after hopping between projects the
+    // (drag-enabled, persisted) panel's exit spring can stall and never fire
+    // onExitComplete — so fall back to dismissing shortly after, which also
+    // covers that case. `dismiss` is idempotent, so whichever fires first wins.
+    window.setTimeout(dismiss, 650);
+  }, [dismiss]);
 
   // Esc to close + lock the page scroll behind the sheet while it's open.
   // Lock on <html> (the scroller) so the page scrollbar is hidden — not just
@@ -91,7 +131,7 @@ export function ProjectSheet({
   };
 
   return (
-    <AnimatePresence onExitComplete={() => (standalone ? router.push("/") : router.back())}>
+    <AnimatePresence onExitComplete={dismiss}>
       {open && (
         <motion.div key="project-sheet" className="fixed inset-0 z-40">
           {/* Blurred backdrop over the homepage. Navbar (z-50) stays crisp
@@ -116,7 +156,11 @@ export function ProjectSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 260, damping: 30 }}
-            drag="y"
+            // Disable dragging once closing: `dragSnapToOrigin` pulls the panel
+            // back to y:0 while the exit animates it to y:100%, which stalls the
+            // exit (it never completes, so onExitComplete never fires and the
+            // node lingers). Turning drag off while !open lets the exit finish.
+            drag={open ? "y" : false}
             dragListener={false}
             dragControls={dragControls}
             dragConstraints={{ top: 0, bottom: 0 }}
