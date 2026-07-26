@@ -11,6 +11,13 @@ import {
 import { X } from "lucide-react";
 import { SheetReadyContext } from "./sheet-ready-context";
 
+// True while a close is unwinding the /work history chain. The sheet remounts on
+// every /work→/work navigation, so as `dismiss` steps back through the chain a
+// fresh ProjectSheet mounts at each intermediate URL — this flag makes those
+// intermediate mounts start closed (render nothing) instead of replaying the
+// enter animation, which is what caused the close "flicker".
+let dismissing = false;
+
 /**
  * Bottom sheet that renders a project case study as an overlay above the
  * homepage (via an intercepting route). The navbar stays visible on top; the
@@ -27,7 +34,9 @@ export function ProjectSheet({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(true);
+  // A sheet that mounts mid-dismissal (an intermediate URL during the back-unwind)
+  // starts closed so it renders nothing and never flashes its enter animation.
+  const [open, setOpen] = useState(() => !dismissing);
   // Keep the sheet's scrollbar hidden until the real content (not the loading
   // skeleton) has rendered — otherwise the thumb flashes at full height while
   // the short skeleton shows, then shrinks once the tall content streams in.
@@ -47,8 +56,18 @@ export function ProjectSheet({
   const dismiss = useCallback(() => {
     if (dismissedRef.current) return;
     dismissedRef.current = true;
+    // Suppress the intermediate sheets that remount as we step back through the
+    // chain (see the module-level `dismissing` note). Safety-reset it in case the
+    // unwind is ever interrupted, so the sheet can always open again.
+    dismissing = true;
+    window.setTimeout(() => {
+      dismissing = false;
+    }, 2000);
     const step = () => {
-      if (!window.location.pathname.startsWith("/work/")) return;
+      if (!window.location.pathname.startsWith("/work/")) {
+        dismissing = false; // chain fully unwound
+        return;
+      }
       const onPop = () => {
         window.removeEventListener("popstate", onPop);
         // Let the router settle the new URL before checking/stepping again.
@@ -89,6 +108,11 @@ export function ProjectSheet({
   // the navbar never jumps. Restore the scroll position on close so going back
   // doesn't jump the homepage to the top of the projects section.
   useEffect(() => {
+    // Skip for the closed intermediate sheets that mount during a dismissal
+    // unwind — they must not lock the scroll or churn `--scrollbar-comp`. `open`
+    // is read at mount only (deps stay `[close]`) so the real sheet's scroll
+    // restore still runs on unmount, after the route transition.
+    if (!open) return;
     const scrollY = window.scrollY;
     const html = document.documentElement;
     const body = document.body;
@@ -114,6 +138,8 @@ export function ProjectSheet({
       // Run after the route transition so it wins over scroll restoration.
       requestAnimationFrame(() => window.scrollTo(0, scrollY));
     };
+    // `open` intentionally read at mount only — see the guard comment above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [close]);
 
   // Flag the sheet's open state on <html> so the navbar can slide away while
