@@ -151,16 +151,16 @@ export function Spotlight({
       id="spotlight"
       data-mode={modeActive ? "active" : "idle"}
       aria-labelledby="spotlight-title"
-      className="relative isolate min-h-[100svh] overflow-hidden bg-background text-white dark:text-[#111111]"
+      className="relative isolate min-h-[100svh] overflow-hidden bg-background text-[#111111] dark:text-white"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[#050506] transition-opacity duration-500 ease-out motion-reduce:transition-none dark:bg-[#f3f0e9]"
+        className="pointer-events-none absolute inset-0 bg-[#f3f0e9] transition-opacity duration-500 ease-out motion-reduce:transition-none dark:bg-[#050506]"
         style={{ opacity: modeActive ? 1 : 0 }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-out motion-reduce:transition-none dark:hidden"
+        className="pointer-events-none absolute inset-0 hidden transition-opacity duration-500 ease-out motion-reduce:transition-none dark:block"
         style={{
           opacity: modeActive ? 1 : 0,
           backgroundImage:
@@ -170,7 +170,7 @@ export function Spotlight({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 hidden transition-opacity duration-500 ease-out motion-reduce:transition-none dark:block"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-out motion-reduce:transition-none dark:hidden"
         style={{
           opacity: modeActive ? 1 : 0,
           backgroundImage:
@@ -182,7 +182,7 @@ export function Spotlight({
       <div
         className={`transition-colors duration-500 ease-out motion-reduce:transition-none ${
           modeActive
-            ? "text-white dark:text-[#111111]"
+            ? "text-[#111111] dark:text-white"
             : "text-foreground"
         }`}
       >
@@ -243,7 +243,7 @@ function CenterContent({
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className={compact ? "max-w-[270px]" : "max-w-2xl"}
       >
-        <div className="mx-auto mb-4 grid h-11 w-11 place-items-center overflow-hidden rounded-full border border-white/20 bg-white/10 shadow-xl backdrop-blur-md dark:border-black/10 dark:bg-black/5">
+        <div className="mx-auto mb-4 grid h-11 w-11 place-items-center overflow-hidden rounded-full border border-black/10 bg-black/5 shadow-xl backdrop-blur-md dark:border-white/20 dark:bg-white/10">
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
