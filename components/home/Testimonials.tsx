@@ -9,7 +9,7 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
     <section
       id="testimonials"
       aria-labelledby="testimonials-heading"
-      className="w-full overflow-hidden bg-background text-foreground transition-colors duration-500 ease-out motion-reduce:transition-none"
+      className="w-full overflow-x-clip bg-background text-foreground transition-colors duration-500 ease-out motion-reduce:transition-none"
     >
       <div className="mx-auto w-full max-w-6xl px-6 py-24 sm:py-32">
         <Reveal>
