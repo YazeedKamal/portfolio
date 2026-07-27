@@ -41,8 +41,8 @@ export function Footer() {
             ))}
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="/play" className="transition-colors hover:text-foreground">
-              Play
+            <Link href="/#spotlight" className="transition-colors hover:text-foreground">
+              Contact
             </Link>
             <span>© {new Date().getFullYear()} Yazeed</span>
           </div>

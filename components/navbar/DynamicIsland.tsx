@@ -7,19 +7,15 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const links = [
-  { href: "/", label: "Work" },
-  { href: "/play", label: "Play" },
+  { href: "/#work", label: "Work" },
+  { href: "/#spotlight", label: "Contact" },
 ];
-
-function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/" || pathname.startsWith("/work");
-  return pathname.startsWith(href);
-}
 
 export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   const pathname = usePathname();
   const [hovered, setHovered] = useState<string | null>(null);
   const [spotlightMode, setSpotlightMode] = useState(false);
+  const [heroMode, setHeroMode] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Slide the navbar up out of view while a project sheet is open.
@@ -38,37 +34,48 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   useEffect(() => {
     let frame = 0;
 
-    function updateSpotlightMode() {
+    function updateActiveSection() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const section = document.querySelector<HTMLElement>("#spotlight");
-        if (!section) {
+        const spotlight = document.querySelector<HTMLElement>("#spotlight");
+        if (spotlight) {
+          const bounds = spotlight.getBoundingClientRect();
+          const transitionLine = window.innerHeight * 0.98;
+          setSpotlightMode(bounds.top <= transitionLine && bounds.bottom > 0);
+        } else {
           setSpotlightMode(false);
-          return;
         }
 
-        const bounds = section.getBoundingClientRect();
-        const transitionLine = window.innerHeight * 0.98;
-        setSpotlightMode(
-          bounds.top <= transitionLine && bounds.bottom > 0,
+        // Hero owns the nav indicator until the projects grid climbs into the
+        // upper half of the viewport.
+        const work = document.querySelector<HTMLElement>("#work");
+        setHeroMode(
+          work ? work.getBoundingClientRect().top > window.innerHeight * 0.5 : false,
         );
       });
     }
 
-    const initialFrame = requestAnimationFrame(updateSpotlightMode);
-    window.addEventListener("scroll", updateSpotlightMode, { passive: true });
-    window.addEventListener("resize", updateSpotlightMode);
+    const initialFrame = requestAnimationFrame(updateActiveSection);
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
 
     return () => {
       cancelAnimationFrame(initialFrame);
       cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateSpotlightMode);
-      window.removeEventListener("resize", updateSpotlightMode);
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
     };
   }, [pathname]);
 
   // Hide the public navbar inside the admin area.
   if (pathname.startsWith("/admin")) return null;
+
+  const isHome = pathname === "/";
+  // Which nav slot carries the active dot. Priority: Contact > Hero (logo) > Work.
+  const contactActive = spotlightMode;
+  const heroActive = isHome && heroMode && !contactActive;
+  const workActive =
+    !heroActive && !contactActive && (isHome || pathname.startsWith("/work"));
 
   return (
     <div
@@ -89,7 +96,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
       >
         <Link
           href="/"
-          className="mr-1 flex items-center gap-2 text-[15px] font-semibold tracking-tight"
+          className="relative mr-1 flex items-center gap-2 text-[15px] font-semibold tracking-tight"
         >
           <span className="grid h-6 w-6 place-items-center overflow-hidden rounded-full bg-foreground text-[11px] font-bold text-background">
             {avatarUrl ? (
@@ -99,7 +106,16 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
               "Y"
             )}
           </span>
-          <span className="hidden sm:inline">Yazeed</span>
+          <span className="relative hidden sm:inline-block">
+            Yazeed
+            {heroActive && (
+              <motion.span
+                layoutId="nav-active-dot"
+                className="absolute -bottom-1.5 left-1/2 z-10 h-1 w-1 -translate-x-1/2 rounded-full bg-foreground"
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
+          </span>
         </Link>
 
         <div
@@ -107,7 +123,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
           onMouseLeave={() => setHovered(null)}
         >
           {links.map((link) => {
-            const active = isActive(pathname, link.href);
+            const active = link.label === "Contact" ? contactActive : workActive;
             return (
               <Link
                 key={link.href}
