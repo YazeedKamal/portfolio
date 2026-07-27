@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/ui/Reveal";
-import { UniqueTestimonial } from "@/components/ui/UniqueTestimonial";
+import { TypewriterTestimonial } from "@/components/ui/TypewriterTestimonial";
 import type { Testimonial } from "@/lib/types";
 
 export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
@@ -22,7 +22,7 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
         </Reveal>
 
         <Reveal delay={0.08}>
-          <UniqueTestimonial testimonials={testimonials} />
+          <TypewriterTestimonial testimonials={testimonials} />
         </Reveal>
       </div>
     </section>

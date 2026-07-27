@@ -180,3 +180,29 @@ body {
 .animate-fade-up {
   animation: fade-up 0.7s var(--ease-out-expo) both;
 }
+
+/* Typewriter caret for the testimonial tooltip. */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-caret-blink {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+/* Instagram-style story ring — a slowly rotating conic gradient. */
+@keyframes ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-ring-spin {
+  animation: ring-spin 6s linear infinite;
+}
