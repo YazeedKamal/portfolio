@@ -2,7 +2,12 @@ import { Reveal } from "@/components/ui/Reveal";
 import { AutoVideo } from "@/components/ui/AutoVideo";
 import { BlockIcon } from "@/components/icon-library";
 import { infoColsClass } from "@/lib/info-columns";
+import { sanitizeRichText } from "@/lib/sanitize-html";
 import type { BlockAlign, ColumnContent, ContentBlock, Media } from "@/lib/types";
+
+// Shared classes for rendered rich-text bodies (bold / italic / underline /
+// link). Links get an underline so they read as links on the page.
+const RICH_TEXT = "[&_a]:underline [&_a]:underline-offset-2";
 
 export function ContentBlocks({
   blocks,
@@ -97,24 +102,45 @@ function MediaView({ media, aspect }: { media: Media; aspect?: string }) {
   );
 }
 
-function TextView({ heading, body }: { heading?: string; body: string }) {
+function TextView({
+  heading,
+  body,
+  reserveHeading = false,
+}: {
+  heading?: string;
+  body: string;
+  // Keep the heading's height even when empty, so a title-less column still
+  // lines up with sibling columns that do have a title (row layout only).
+  reserveHeading?: boolean;
+}) {
   return (
     <div>
-      {heading && (
+      {heading ? (
         <h2 className="mb-3 text-base font-semibold tracking-tight sm:text-lg">{heading}</h2>
-      )}
-      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base">
-        {body}
-      </p>
+      ) : reserveHeading ? (
+        <h2 aria-hidden className="mb-3 hidden text-base font-semibold tracking-tight sm:text-lg @2xl:block">
+          &nbsp;
+        </h2>
+      ) : null}
+      <p
+        className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base ${RICH_TEXT}`}
+        dangerouslySetInnerHTML={{ __html: sanitizeRichText(body) }}
+      />
     </div>
   );
 }
 
-function ColumnContentView({ content }: { content: ColumnContent }) {
+function ColumnContentView({
+  content,
+  reserveHeading,
+}: {
+  content: ColumnContent;
+  reserveHeading?: boolean;
+}) {
   return content.kind === "media" ? (
     <MediaView media={content.media} aspect={content.aspect} />
   ) : (
-    <TextView heading={content.heading} body={content.body} />
+    <TextView heading={content.heading} body={content.body} reserveHeading={reserveHeading} />
   );
 }
 
@@ -129,9 +155,10 @@ export function BlockView({ block }: { block: ContentBlock }) {
           {block.heading && (
             <h2 className="mb-4 text-base font-semibold tracking-tight sm:text-lg">{block.heading}</h2>
           )}
-          <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base">
-            {block.body}
-          </p>
+          <p
+            className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base ${RICH_TEXT}`}
+            dangerouslySetInnerHTML={{ __html: sanitizeRichText(block.body) }}
+          />
         </div>
       );
     }
@@ -145,7 +172,12 @@ export function BlockView({ block }: { block: ContentBlock }) {
       );
     }
 
-    case "columns":
+    case "columns": {
+      // If any column has a title, reserve the title's height in the others so
+      // their bodies stay aligned across the row.
+      const anyHeading = block.columns.some(
+        (c) => c.content.kind === "text" && (c.content.heading ?? "").trim() !== "",
+      );
       return (
         <div className="flex flex-col gap-6 @2xl:flex-row @2xl:items-start @2xl:gap-8">
           {block.columns.map((col, ci) => (
@@ -157,11 +189,12 @@ export function BlockView({ block }: { block: ContentBlock }) {
               style={{ ["--col-g" as string]: `${col.width}` }}
               className="w-full min-w-0 @2xl:w-auto @2xl:basis-0 @2xl:grow-[var(--col-g)]"
             >
-              <ColumnContentView content={col.content} />
+              <ColumnContentView content={col.content} reserveHeading={anyHeading} />
             </div>
           ))}
         </div>
       );
+    }
 
     case "info":
       return (
@@ -173,9 +206,10 @@ export function BlockView({ block }: { block: ContentBlock }) {
                 <span className="text-base font-semibold tracking-tight sm:text-lg">{item.title}</span>
               </dt>
               {item.body && (
-                <dd className="mt-1 whitespace-pre-line text-sm leading-relaxed text-foreground/70 sm:text-base">
-                  {item.body}
-                </dd>
+                <dd
+                  className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-foreground/70 sm:text-base ${RICH_TEXT}`}
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.body) }}
+                />
               )}
             </div>
           ))}

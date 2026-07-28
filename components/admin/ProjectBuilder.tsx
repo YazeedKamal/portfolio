@@ -8,6 +8,7 @@ import {
   useTransition,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -35,6 +36,7 @@ import {
   AlignLeft,
   AlignRight,
   ArrowLeft,
+  Bold,
   Check,
   ChevronDown,
   Columns2,
@@ -43,6 +45,8 @@ import {
   GripVertical,
   Image as ImageIcon,
   Info,
+  Italic,
+  Link2,
   ListPlus,
   Loader2,
   Minus,
@@ -52,6 +56,7 @@ import {
   Smartphone,
   Trash2,
   Type,
+  Underline,
   Upload,
   X,
 } from "lucide-react";
@@ -79,6 +84,16 @@ const uid = () =>
     : Math.random().toString(36).slice(2);
 
 const emptyMedia = (): Media => ({ url: "", kind: "image" });
+
+// Multi-column rows hold between 2 and 4 equal-width columns.
+const MIN_COLUMNS = 2;
+const MAX_COLUMNS = 4;
+const emptyColumn = (): Column => ({ width: 0, content: { kind: "text", heading: "", body: "" } });
+// Columns are always equal width now (no manual resizing) — spread 100% evenly.
+const equalizeColumns = (cols: Column[]): Column[] => {
+  const w = 100 / cols.length;
+  return cols.map((c) => ({ ...c, width: w }));
+};
 
 type BlockKind = "text" | "media" | "columns" | "info" | "divider";
 
@@ -553,7 +568,7 @@ function SortableBlock({
     >
       {/* Floating toolbar */}
       <div
-        className={`absolute -top-3 right-3 z-20 flex items-center gap-0.5 rounded-full border border-border bg-background p-0.5 shadow-sm transition-opacity ${
+        className={`absolute bottom-full right-0 mb-2 z-20 flex items-center gap-0.5 rounded-full border border-border bg-background p-0.5 shadow-sm transition-opacity ${
           selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
         onPointerDown={(e) => e.stopPropagation()}
@@ -617,6 +632,7 @@ function BlockEditor({
           placeholder="Write something…"
           className="whitespace-pre-line text-lg leading-relaxed text-foreground/80"
           multiline
+          rich
         />
       </ResizableWidth>
     );
@@ -690,126 +706,114 @@ function ColumnsEditor({
   selected: boolean;
   onChange: (cols: Column[]) => void;
 }) {
-  const rowRef = useRef<HTMLDivElement>(null);
-
   const setContent = (i: number, content: ColumnContent) =>
     onChange(columns.map((c, idx) => (idx === i ? { ...c, content } : c)));
 
-  const startDivider = (i: number) => (e: ReactPointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = rowRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const total = columns.reduce((s, c) => s + c.width, 0);
-    const leftEdge = columns.slice(0, i).reduce((s, c) => s + c.width, 0);
-    const pair = columns[i].width + columns[i + 1].width;
-    const onMove = (ev: PointerEvent) => {
-      const frac = (ev.clientX - rect.left) / rect.width;
-      let leftW = frac * total - leftEdge;
-      leftW = Math.max(pair * 0.15, Math.min(pair * 0.85, leftW));
-      onChange(
-        columns.map((c, idx) =>
-          idx === i ? { ...c, width: leftW } : idx === i + 1 ? { ...c, width: pair - leftW } : c,
-        ),
-      );
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", up);
-  };
+  const addColumn = () => onChange(equalizeColumns([...columns, emptyColumn()]));
+  const removeColumn = (i: number) =>
+    onChange(equalizeColumns(columns.filter((_, idx) => idx !== i)));
 
   return (
-    <div
-      ref={rowRef}
-      className="flex flex-col gap-6 @2xl:flex-row @2xl:items-stretch @2xl:gap-8"
-    >
+    <div className="flex flex-col gap-6 @2xl:flex-row @2xl:items-stretch @2xl:gap-8">
       {columns.map((col, i) => (
-        <Fragment key={i}>
-          <div
-            style={{ ["--col-g" as string]: `${col.width}` }}
-            className="relative w-full min-w-0 @2xl:w-auto @2xl:basis-0 @2xl:grow-[var(--col-g)]"
-          >
-            {selected && (
-              <div
-                className="absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-background p-0.5 shadow-sm"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <MiniToggle
-                  active={col.content.kind === "media"}
-                  onClick={() =>
-                    col.content.kind !== "media" && setContent(i, { kind: "media", media: emptyMedia() })
-                  }
-                  label="Media"
-                />
-                <MiniToggle
-                  active={col.content.kind === "text"}
-                  onClick={() =>
-                    col.content.kind !== "text" && setContent(i, { kind: "text", heading: "", body: "" })
-                  }
-                  label="Text"
-                />
-              </div>
-            )}
-
-            {col.content.kind === "media" ? (
-              <InlineMedia
-                media={col.content.media}
-                onChange={(media) =>
-                  setContent(i, {
-                    kind: "media",
-                    media,
-                    aspect: col.content.kind === "media" ? col.content.aspect : undefined,
-                  })
-                }
-                aspect={col.content.aspect}
-                onAspectChange={(aspect) =>
-                  setContent(i, {
-                    kind: "media",
-                    media: col.content.kind === "media" ? col.content.media : emptyMedia(),
-                    aspect,
-                  })
-                }
-                selected={selected}
-                placeholderAspect="aspect-[4/3]"
-              />
-            ) : (
-              <div>
-                <InlineText
-                  as="h2"
-                  value={col.content.heading ?? ""}
-                  onChange={(heading) => setContent(i, { ...(col.content as { kind: "text"; body: string }), kind: "text", heading })}
-                  placeholder="Heading (optional)"
-                  className="mb-3 text-2xl font-semibold tracking-tight empty:mb-0"
-                />
-                <InlineText
-                  value={col.content.kind === "text" ? col.content.body : ""}
-                  onChange={(body) => setContent(i, { kind: "text", heading: (col.content as { heading?: string }).heading, body })}
-                  placeholder="Write something…"
-                  className="whitespace-pre-line text-lg leading-relaxed text-foreground/80"
-                  multiline
-                />
-              </div>
-            )}
-          </div>
-
-          {i < columns.length - 1 && (
+        <div
+          key={i}
+          style={{ ["--col-g" as string]: `${col.width}` }}
+          className="relative w-full min-w-0 @2xl:w-auto @2xl:basis-0 @2xl:grow-[var(--col-g)]"
+        >
+          {selected && (
             <div
-              onPointerDown={selected ? startDivider(i) : undefined}
-              className={`relative hidden shrink-0 basis-0 items-center justify-center @2xl:flex ${
-                selected ? "cursor-col-resize" : "pointer-events-none"
-              }`}
+              className="absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-background p-0.5 shadow-sm"
+              onPointerDown={(e) => e.stopPropagation()}
             >
-              {selected && (
-                <div className="absolute h-16 w-1 rounded-full bg-border-strong transition-colors hover:bg-[#0D99FF]" />
+              <MiniToggle
+                active={col.content.kind === "media"}
+                onClick={() =>
+                  col.content.kind !== "media" && setContent(i, { kind: "media", media: emptyMedia() })
+                }
+                label="Media"
+              />
+              <MiniToggle
+                active={col.content.kind === "text"}
+                onClick={() =>
+                  col.content.kind !== "text" && setContent(i, { kind: "text", heading: "", body: "" })
+                }
+                label="Text"
+              />
+              {columns.length > MIN_COLUMNS && (
+                <>
+                  <span className="mx-0.5 h-4 w-px bg-border" />
+                  <button
+                    type="button"
+                    onClick={() => removeColumn(i)}
+                    className="cursor-pointer rounded-full p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500"
+                    aria-label="Remove column"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </>
               )}
             </div>
           )}
-        </Fragment>
+
+          {col.content.kind === "media" ? (
+            <InlineMedia
+              media={col.content.media}
+              onChange={(media) =>
+                setContent(i, {
+                  kind: "media",
+                  media,
+                  aspect: col.content.kind === "media" ? col.content.aspect : undefined,
+                })
+              }
+              aspect={col.content.aspect}
+              onAspectChange={(aspect) =>
+                setContent(i, {
+                  kind: "media",
+                  media: col.content.kind === "media" ? col.content.media : emptyMedia(),
+                  aspect,
+                })
+              }
+              selected={selected}
+              placeholderAspect="aspect-[4/3]"
+            />
+          ) : (
+            <div>
+              <InlineText
+                as="h2"
+                value={col.content.heading ?? ""}
+                onChange={(heading) => setContent(i, { ...(col.content as { kind: "text"; body: string }), kind: "text", heading })}
+                placeholder="Heading (optional)"
+                // No `empty:mb-0` here (unlike the standalone text block): keep the
+                // title's space reserved so a title-less column stays aligned with
+                // sibling columns that have a title.
+                className="mb-3 text-2xl font-semibold tracking-tight"
+              />
+              <InlineText
+                value={col.content.kind === "text" ? col.content.body : ""}
+                onChange={(body) => setContent(i, { kind: "text", heading: (col.content as { heading?: string }).heading, body })}
+                placeholder="Write something…"
+                className="whitespace-pre-line text-lg leading-relaxed text-foreground/80"
+                multiline
+                rich
+              />
+            </div>
+          )}
+        </div>
       ))}
 
+      {selected && columns.length < MAX_COLUMNS && (
+        <button
+          type="button"
+          onClick={addColumn}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-6 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground @2xl:w-auto @2xl:self-stretch @2xl:px-3 @2xl:py-0"
+          aria-label="Add column"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="@2xl:hidden">Add column</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -862,6 +866,7 @@ function InfoEditor({
               placeholder="Details…"
               className="mt-1 whitespace-pre-line leading-relaxed text-foreground/70"
               multiline
+              rich
             />
           </div>
         ))}
@@ -985,6 +990,7 @@ function InlineText({
   className = "",
   placeholder,
   multiline = false,
+  rich = false,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -992,16 +998,84 @@ function InlineText({
   className?: string;
   placeholder?: string;
   multiline?: boolean;
+  // When true the field stores HTML and shows a bold/italic/underline/link
+  // toolbar over the current text selection.
+  rich?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const [menu, setMenu] = useState<{ top: number; left: number } | null>(null);
 
   // Seed the DOM once on mount; never re-seed from props (avoids caret jumps —
-  // the contentEditable is the source of truth while editing). `innerText`
-  // round-trips multi-line breaks correctly.
+  // the contentEditable is the source of truth while editing). Plain fields use
+  // `innerText` (round-trips line breaks); rich fields seed HTML, but legacy
+  // plain-text values (no tags) are seeded as text so stray "<" isn't parsed.
   useEffect(() => {
-    if (ref.current && ref.current.innerText !== value) ref.current.innerText = value;
+    const el = ref.current;
+    if (!el) return;
+    if (rich && /<[a-z][\s\S]*>/i.test(value)) {
+      if (el.innerHTML !== value) el.innerHTML = value;
+    } else if (el.innerText !== value) {
+      el.innerText = value;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const emit = () => {
+    if (ref.current) onChange(rich ? ref.current.innerHTML : ref.current.innerText);
+  };
+
+  // Show/position the floating format bar over the current selection.
+  const syncMenu = () => {
+    if (!rich) return;
+    const sel = window.getSelection();
+    if (
+      !sel ||
+      sel.rangeCount === 0 ||
+      sel.isCollapsed ||
+      !ref.current ||
+      !ref.current.contains(sel.anchorNode)
+    ) {
+      setMenu(null);
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    if (!rect.width && !rect.height) {
+      setMenu(null);
+      return;
+    }
+    setMenu({ top: rect.top, left: rect.left + rect.width / 2 });
+  };
+
+  useEffect(() => {
+    if (!rich) return;
+    document.addEventListener("selectionchange", syncMenu);
+    return () => document.removeEventListener("selectionchange", syncMenu);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rich]);
+
+  const exec = (command: string, arg?: string) => {
+    ref.current?.focus();
+    document.execCommand(command, false, arg);
+    emit();
+    syncMenu();
+  };
+
+  const addLink = () => {
+    const sel = window.getSelection();
+    const saved = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const url = window.prompt("Link URL", "https://");
+    if (saved) {
+      const s = window.getSelection();
+      s?.removeAllRanges();
+      s?.addRange(saved);
+    }
+    ref.current?.focus();
+    if (url === null) return;
+    if (url.trim() === "") document.execCommand("unlink", false);
+    else document.execCommand("createLink", false, url.trim());
+    emit();
+    setMenu(null);
+  };
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLElement>) {
     if (!multiline && e.key === "Enter") {
@@ -1028,23 +1102,65 @@ function InlineText({
         r.collapse(true);
         sel.removeAllRanges();
         sel.addRange(r);
-        onChange(e.currentTarget.innerText);
+        emit();
       }
     }
   }
 
   return (
-    <Tag
-      // @ts-expect-error — ref type varies with the tag but is a valid HTMLElement ref
-      ref={ref}
-      contentEditable
-      suppressContentEditableWarning
-      spellCheck={false}
-      data-placeholder={placeholder}
-      onInput={(e) => onChange((e.currentTarget as HTMLElement).innerText)}
-      onKeyDown={handleKeyDown}
-      className={`cursor-text whitespace-pre-wrap break-words outline-none ${className}`}
-    />
+    <>
+      <Tag
+        // @ts-expect-error — ref type varies with the tag but is a valid HTMLElement ref
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        spellCheck={false}
+        data-placeholder={placeholder}
+        onInput={emit}
+        onKeyDown={handleKeyDown}
+        onBlur={() => setMenu(null)}
+        className={`cursor-text whitespace-pre-wrap break-words outline-none ${
+          rich ? "[&_a]:underline [&_a]:underline-offset-2" : ""
+        } ${className}`}
+      />
+      {menu &&
+        createPortal(
+          <div
+            style={{ position: "fixed", top: menu.top, left: menu.left, transform: "translate(-50%, calc(-100% - 8px))" }}
+            className="z-50 flex items-center gap-0.5 rounded-full border border-border bg-background p-0.5 shadow-lg"
+            // Keep the text selection alive when a button is pressed.
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <FmtBtn icon={Bold} label="Bold" onClick={() => exec("bold")} />
+            <FmtBtn icon={Italic} label="Italic" onClick={() => exec("italic")} />
+            <FmtBtn icon={Underline} label="Underline" onClick={() => exec("underline")} />
+            <FmtBtn icon={Link2} label="Link" onClick={addLink} />
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function FmtBtn({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="cursor-pointer rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+    >
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }
 
