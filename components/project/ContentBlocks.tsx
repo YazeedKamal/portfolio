@@ -158,17 +158,24 @@ export function BlockView({ block }: { block: ContentBlock }) {
   switch (block.type) {
     case "text": {
       const { box, text } = alignClasses(block.align);
+      // A heading-only text block (title, no body): drop the empty paragraph and
+      // the heading's bottom margin so it takes no extra space.
+      const hasBody = block.body.replace(/<[^>]*>/g, "").replace(/&nbsp;|\s/g, "") !== "";
       return (
         <div className={`${box} ${text}`} style={{ width: `${block.width ?? 100}%` }}>
           {block.heading && (
-            <h2 className={`mb-4 font-semibold tracking-tight ${renderHeadingSize(block.headingSize)}`}>
+            <h2
+              className={`font-semibold tracking-tight ${hasBody ? "mb-4" : ""} ${renderHeadingSize(block.headingSize)}`}
+            >
               {block.heading}
             </h2>
           )}
-          <p
-            className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base ${RICH_TEXT}`}
-            dangerouslySetInnerHTML={{ __html: sanitizeRichText(block.body) }}
-          />
+          {hasBody && (
+            <p
+              className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base ${RICH_TEXT}`}
+              dangerouslySetInnerHTML={{ __html: sanitizeRichText(block.body) }}
+            />
+          )}
         </div>
       );
     }
