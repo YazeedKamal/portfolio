@@ -1,16 +1,13 @@
 import { HomeShowcase } from "@/components/home/HomeShowcase";
 import { Testimonials } from "@/components/home/Testimonials";
-import { Footer } from "@/components/home/Footer";
-import { Spotlight } from "@/components/home/Spotlight";
-import { getPublishedProjects, getSpotlightItems, getTestimonials, getSiteSettings } from "@/lib/data";
+import { getPublishedProjects, getTestimonials, getSiteSettings } from "@/lib/data";
 
 export const revalidate = 0;
 
 export default async function Home() {
-  const [projects, testimonials, spotlightItems, settings] = await Promise.all([
+  const [projects, testimonials, settings] = await Promise.all([
     getPublishedProjects(),
     getTestimonials(),
-    getSpotlightItems(),
     getSiteSettings(),
   ]);
 
@@ -24,8 +21,6 @@ export default async function Home() {
         heroHighlight={settings.hero_highlight}
       />
       <Testimonials testimonials={testimonials} />
-      <Spotlight items={spotlightItems} avatarUrl={settings.avatar_url} />
-      <Footer />
     </main>
   );
 }

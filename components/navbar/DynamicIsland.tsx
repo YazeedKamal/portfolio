@@ -6,15 +6,11 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-const links = [
-  { href: "/#work", label: "Work" },
-  { href: "/#spotlight", label: "Contact" },
-];
+const links = [{ href: "/#work", label: "Work" }];
 
 export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   const pathname = usePathname();
   const [hovered, setHovered] = useState<string | null>(null);
-  const [spotlightMode, setSpotlightMode] = useState(false);
   const [heroMode, setHeroMode] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -37,15 +33,6 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
     function updateActiveSection() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const spotlight = document.querySelector<HTMLElement>("#spotlight");
-        if (spotlight) {
-          const bounds = spotlight.getBoundingClientRect();
-          const transitionLine = window.innerHeight * 0.98;
-          setSpotlightMode(bounds.top <= transitionLine && bounds.bottom > 0);
-        } else {
-          setSpotlightMode(false);
-        }
-
         // Hero owns the nav indicator until the projects grid climbs into the
         // upper half of the viewport.
         const work = document.querySelector<HTMLElement>("#work");
@@ -71,11 +58,9 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   if (pathname.startsWith("/admin")) return null;
 
   const isHome = pathname === "/";
-  // Which nav slot carries the active dot. Priority: Contact > Hero (logo) > Work.
-  const contactActive = spotlightMode;
-  const heroActive = isHome && heroMode && !contactActive;
-  const workActive =
-    !heroActive && !contactActive && (isHome || pathname.startsWith("/work"));
+  // Which nav slot carries the active dot. Priority: Hero (logo) > Work.
+  const heroActive = isHome && heroMode;
+  const workActive = !heroActive && (isHome || pathname.startsWith("/work"));
 
   return (
     <div
@@ -90,9 +75,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: sheetOpen ? -120 : 0, opacity: sheetOpen ? 0 : 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className={`glass pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-4 pr-1.5 text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-[background-color,border-color,color] duration-500 ease-out motion-reduce:transition-none ${
-          spotlightMode ? "spotlight-nav" : ""
-        }`}
+        className="glass pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-4 pr-1.5 text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-[background-color,border-color,color] duration-500 ease-out motion-reduce:transition-none"
       >
         <Link
           href="/"
@@ -123,7 +106,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
           onMouseLeave={() => setHovered(null)}
         >
           {links.map((link) => {
-            const active = link.label === "Contact" ? contactActive : workActive;
+            const active = workActive;
             return (
               <Link
                 key={link.href}
