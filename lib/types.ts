@@ -1,6 +1,10 @@
 /** How a block/column aligns horizontally within the content column. */
 export type BlockAlign = "left" | "center" | "right";
 
+/** Fixed size presets for a section heading (see `lib/heading-sizes`).
+ *  `md` is the default / historical size. */
+export type HeadingSize = "sm" | "md" | "lg" | "xl";
+
 /** Media kind — gifs upload as image/gif and render as an <img> ("image");
  *  "embed" is an uploaded HTML animation rendered in a sandboxed <iframe>. */
 export type MediaKind = "image" | "video" | "embed";
@@ -19,7 +23,7 @@ export type Media = {
  *  required for HTML embeds, which have no natural height). */
 export type ColumnContent =
   | { kind: "media"; media: Media; aspect?: string }
-  | { kind: "text"; heading?: string; body: string };
+  | { kind: "text"; heading?: string; headingSize?: HeadingSize; body: string };
 
 /** One column: a percentage width (of the row) + its content. */
 export type Column = { width: number; content: ColumnContent };
@@ -29,7 +33,7 @@ export type InfoItem = { icon?: string; title: string; body: string };
 
 export type ContentBlock =
   // Centered/aligned rich text. `width` is a percent (20–100) of the column.
-  | { type: "text"; heading?: string; body: string; align?: BlockAlign; width?: number }
+  | { type: "text"; heading?: string; headingSize?: HeadingSize; body: string; align?: BlockAlign; width?: number }
   // A single image / video / gif. `width` is a percent (20–100) of the column;
   // `aspect` is an optional CSS aspect-ratio (e.g. "16 / 9") set by dragging the
   // resize handles — when unset the media keeps its natural height.

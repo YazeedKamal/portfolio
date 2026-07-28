@@ -3,7 +3,8 @@ import { AutoVideo } from "@/components/ui/AutoVideo";
 import { BlockIcon } from "@/components/icon-library";
 import { infoColsClass } from "@/lib/info-columns";
 import { sanitizeRichText } from "@/lib/sanitize-html";
-import type { BlockAlign, ColumnContent, ContentBlock, Media } from "@/lib/types";
+import { renderHeadingSize } from "@/lib/heading-sizes";
+import type { BlockAlign, ColumnContent, ContentBlock, HeadingSize, Media } from "@/lib/types";
 
 // Shared classes for rendered rich-text bodies (bold / italic / underline /
 // link). Links get an underline so they read as links on the page.
@@ -104,10 +105,12 @@ function MediaView({ media, aspect }: { media: Media; aspect?: string }) {
 
 function TextView({
   heading,
+  headingSize,
   body,
   reserveHeading = false,
 }: {
   heading?: string;
+  headingSize?: HeadingSize;
   body: string;
   // Keep the heading's height even when empty, so a title-less column still
   // lines up with sibling columns that do have a title (row layout only).
@@ -116,9 +119,9 @@ function TextView({
   return (
     <div>
       {heading ? (
-        <h2 className="mb-3 text-base font-semibold tracking-tight sm:text-lg">{heading}</h2>
+        <h2 className={`mb-3 font-semibold tracking-tight ${renderHeadingSize(headingSize)}`}>{heading}</h2>
       ) : reserveHeading ? (
-        <h2 aria-hidden className="mb-3 hidden text-base font-semibold tracking-tight sm:text-lg @2xl:block">
+        <h2 aria-hidden className={`mb-3 hidden font-semibold tracking-tight @2xl:block ${renderHeadingSize()}`}>
           &nbsp;
         </h2>
       ) : null}
@@ -140,7 +143,12 @@ function ColumnContentView({
   return content.kind === "media" ? (
     <MediaView media={content.media} aspect={content.aspect} />
   ) : (
-    <TextView heading={content.heading} body={content.body} reserveHeading={reserveHeading} />
+    <TextView
+      heading={content.heading}
+      headingSize={content.headingSize}
+      body={content.body}
+      reserveHeading={reserveHeading}
+    />
   );
 }
 
@@ -153,7 +161,9 @@ export function BlockView({ block }: { block: ContentBlock }) {
       return (
         <div className={`${box} ${text}`} style={{ width: `${block.width ?? 100}%` }}>
           {block.heading && (
-            <h2 className="mb-4 text-base font-semibold tracking-tight sm:text-lg">{block.heading}</h2>
+            <h2 className={`mb-4 font-semibold tracking-tight ${renderHeadingSize(block.headingSize)}`}>
+              {block.heading}
+            </h2>
           )}
           <p
             className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 sm:text-base ${RICH_TEXT}`}

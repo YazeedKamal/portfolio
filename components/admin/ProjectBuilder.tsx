@@ -64,12 +64,19 @@ import { updateProject } from "@/app/admin/actions";
 import { ProjectPreviewSheet } from "@/components/admin/ProjectPreviewSheet";
 import { MEDIA_ACCEPT, uploadMedia } from "@/lib/upload-media";
 import { INFO_MAX_COLUMNS, infoColsClass } from "@/lib/info-columns";
+import {
+  DEFAULT_HEADING_SIZE,
+  HEADING_SIZE_KEYS,
+  HEADING_SIZE_LABELS,
+  editorHeadingSize,
+} from "@/lib/heading-sizes";
 import { ICON_LIBRARY, ICON_NAMES } from "@/components/icon-library";
 import type {
   BlockAlign,
   Column,
   ColumnContent,
   ContentBlock,
+  HeadingSize,
   InfoItem,
   Media,
   Project,
@@ -624,7 +631,9 @@ function BlockEditor({
           value={block.heading ?? ""}
           onChange={(heading) => onChange({ ...block, heading })}
           placeholder="Heading (optional)"
-          className="mb-3 text-2xl font-semibold tracking-tight empty:mb-0"
+          className={`mb-3 font-semibold tracking-tight empty:mb-0 ${editorHeadingSize(block.headingSize)}`}
+          size={block.headingSize}
+          onSizeChange={(headingSize) => onChange({ ...block, headingSize })}
         />
         <InlineText
           value={block.body}
@@ -787,11 +796,27 @@ function ColumnsEditor({
                 // No `empty:mb-0` here (unlike the standalone text block): keep the
                 // title's space reserved so a title-less column stays aligned with
                 // sibling columns that have a title.
-                className="mb-3 text-2xl font-semibold tracking-tight"
+                className={`mb-3 font-semibold tracking-tight ${editorHeadingSize(col.content.kind === "text" ? col.content.headingSize : undefined)}`}
+                size={col.content.kind === "text" ? col.content.headingSize : undefined}
+                onSizeChange={(headingSize) =>
+                  setContent(i, {
+                    kind: "text",
+                    heading: col.content.kind === "text" ? col.content.heading : "",
+                    headingSize,
+                    body: col.content.kind === "text" ? col.content.body : "",
+                  })
+                }
               />
               <InlineText
                 value={col.content.kind === "text" ? col.content.body : ""}
-                onChange={(body) => setContent(i, { kind: "text", heading: (col.content as { heading?: string }).heading, body })}
+                onChange={(body) =>
+                  setContent(i, {
+                    kind: "text",
+                    heading: col.content.kind === "text" ? col.content.heading : undefined,
+                    headingSize: col.content.kind === "text" ? col.content.headingSize : undefined,
+                    body,
+                  })
+                }
                 placeholder="Write something…"
                 className="whitespace-pre-line text-lg leading-relaxed text-foreground/80"
                 multiline
@@ -991,6 +1016,8 @@ function InlineText({
   placeholder,
   multiline = false,
   rich = false,
+  size,
+  onSizeChange,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -1001,9 +1028,20 @@ function InlineText({
   // When true the field stores HTML and shows a bold/italic/underline/link
   // toolbar over the current text selection.
   rich?: boolean;
+  // When `onSizeChange` is provided, focusing the field shows a size toolbar
+  // above it with the fixed heading-size presets.
+  size?: HeadingSize;
+  onSizeChange?: (s: HeadingSize) => void;
 }) {
   const ref = useRef<HTMLElement>(null);
   const [menu, setMenu] = useState<{ top: number; left: number } | null>(null);
+  const [sizeBar, setSizeBar] = useState<{ top: number; left: number } | null>(null);
+
+  const showSizeBar = () => {
+    if (!onSizeChange || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setSizeBar({ top: rect.top, left: rect.left });
+  };
 
   // Seed the DOM once on mount; never re-seed from props (avoids caret jumps —
   // the contentEditable is the source of truth while editing). Plain fields use
@@ -1118,7 +1156,11 @@ function InlineText({
         data-placeholder={placeholder}
         onInput={emit}
         onKeyDown={handleKeyDown}
-        onBlur={() => setMenu(null)}
+        onFocus={showSizeBar}
+        onBlur={() => {
+          setMenu(null);
+          setSizeBar(null);
+        }}
         className={`cursor-text whitespace-pre-wrap break-words outline-none ${
           rich ? "[&_a]:underline [&_a]:underline-offset-2" : ""
         } ${className}`}
@@ -1135,6 +1177,36 @@ function InlineText({
             <FmtBtn icon={Italic} label="Italic" onClick={() => exec("italic")} />
             <FmtBtn icon={Underline} label="Underline" onClick={() => exec("underline")} />
             <FmtBtn icon={Link2} label="Link" onClick={addLink} />
+          </div>,
+          document.body,
+        )}
+      {sizeBar &&
+        onSizeChange &&
+        createPortal(
+          <div
+            style={{ position: "fixed", top: sizeBar.top, left: sizeBar.left, transform: "translateY(calc(-100% - 8px))" }}
+            className="z-50 flex items-center gap-0.5 rounded-full border border-border bg-background p-0.5 shadow-lg"
+            // Keep the heading focused when a size is picked.
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {HEADING_SIZE_KEYS.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  onSizeChange(key);
+                  requestAnimationFrame(showSizeBar);
+                }}
+                title={`Heading size ${HEADING_SIZE_LABELS[key]}`}
+                className={`min-w-7 cursor-pointer rounded-full px-2 py-1 text-xs font-medium tabular-nums transition-colors ${
+                  (size ?? DEFAULT_HEADING_SIZE) === key
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                }`}
+              >
+                {HEADING_SIZE_LABELS[key]}
+              </button>
+            ))}
           </div>,
           document.body,
         )}
