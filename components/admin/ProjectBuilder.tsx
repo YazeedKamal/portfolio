@@ -63,6 +63,7 @@ import {
 import { updateProject } from "@/app/admin/actions";
 import { ProjectPreviewSheet } from "@/components/admin/ProjectPreviewSheet";
 import { MEDIA_ACCEPT, uploadMedia } from "@/lib/upload-media";
+import { isVideoUrl } from "@/lib/media";
 import { INFO_MAX_COLUMNS, infoColsClass } from "@/lib/info-columns";
 import {
   DEFAULT_HEADING_SIZE,
@@ -443,7 +444,7 @@ function CanvasHero({
           onChange={onCover}
           aspect="aspect-[16/9]"
           rounded="rounded-[2rem]"
-          label="hero image"
+          label="hero media"
         />
       </div>
     </div>
@@ -466,14 +467,18 @@ function CardThumbnail({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const preview = value ?? cover;
   const usingFallback = !value;
 
   async function handleFile(file: File) {
     setBusy(true);
+    setError(null);
     try {
       const { url } = await uploadMedia(file);
       onChange(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setBusy(false);
     }
@@ -486,8 +491,12 @@ function CardThumbnail({
       </p>
       <div className="group/thumb relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-card">
         {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="h-full w-full object-cover" />
+          isVideoUrl(preview) ? (
+            <video src={preview} muted loop autoPlay playsInline className="h-full w-full object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview} alt="" className="h-full w-full object-cover" />
+          )
         ) : (
           <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">
             No image
@@ -531,6 +540,7 @@ function CardThumbnail({
           e.target.value = "";
         }}
       />
+      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
     </div>
   );
 }
@@ -1376,12 +1386,16 @@ function InlineImage({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleFile(file: File) {
     setBusy(true);
+    setError(null);
     try {
       const { url: uploaded } = await uploadMedia(file);
       onChange(uploaded);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setBusy(false);
     }
@@ -1391,8 +1405,12 @@ function InlineImage({
     <div className="w-full">
       {url ? (
         <div className={`group/m relative overflow-hidden ${rounded} border border-border bg-card`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className={`${aspect} w-full object-cover`} />
+          {isVideoUrl(url) ? (
+            <video src={url} muted loop autoPlay playsInline className={`${aspect} w-full object-cover`} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt="" className={`${aspect} w-full object-cover`} />
+          )}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -1428,6 +1446,7 @@ function InlineImage({
           e.target.value = "";
         }}
       />
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { isVideoUrl } from "@/lib/media";
 
 /** Deterministic per-index hover tilt — feels random, stays stable. */
 const HOVER_TILTS = [-2.5, 3, -3.5, 2, 4, -2.5, 3.5, -2];
@@ -45,14 +46,25 @@ export function ProjectCard({
       >
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-border bg-card">
           {thumb ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={thumb}
-              alt={project.title}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
+            isVideoUrl(thumb) ? (
+              <video
+                src={thumb}
+                muted
+                loop
+                autoPlay
+                playsInline
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={thumb}
+                alt={project.title}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            )
           ) : (
             <div className="grid h-full w-full place-items-center text-muted-foreground">
               No cover

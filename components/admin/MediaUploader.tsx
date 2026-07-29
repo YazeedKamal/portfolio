@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compress-image";
+import { MAX_MEDIA_BYTES } from "@/lib/upload-media";
 import type { Media } from "@/lib/types";
 
 const ACCEPT =
@@ -39,8 +40,8 @@ export function MediaUploader({
       setError("Choose an image, gif or video file.");
       return;
     }
-    if (file.size > 100 * 1024 * 1024) {
-      setError("The file must be smaller than 100 MB.");
+    if (file.size > MAX_MEDIA_BYTES) {
+      setError(`The file must be smaller than ${MAX_MEDIA_BYTES / 1024 / 1024} MB.`);
       return;
     }
 

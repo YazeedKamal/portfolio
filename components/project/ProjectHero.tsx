@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { isVideoUrl } from "@/lib/media";
 
 export function ProjectHero({
   project,
@@ -46,14 +47,25 @@ export function ProjectHero({
 
         {project.cover_url && (
           <div className="mt-8 overflow-hidden rounded-[2rem] border border-border bg-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={project.cover_url}
-              alt={project.title}
-              fetchPriority="high"
-              decoding="async"
-              className="aspect-[16/9] w-full object-cover"
-            />
+            {isVideoUrl(project.cover_url) ? (
+              <video
+                src={project.cover_url}
+                muted
+                loop
+                autoPlay
+                playsInline
+                className="aspect-[16/9] w-full object-cover"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={project.cover_url}
+                alt={project.title}
+                fetchPriority="high"
+                decoding="async"
+                className="aspect-[16/9] w-full object-cover"
+              />
+            )}
           </div>
         )}
       </header>
