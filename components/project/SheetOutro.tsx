@@ -148,10 +148,10 @@ function OutroCard({
   const inner = (
     <>
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-border bg-card">
-        {project.cover_url ? (
+        {(project.card_url ?? project.cover_url) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={project.cover_url}
+            src={project.card_url ?? project.cover_url ?? ""}
             alt={project.title}
             loading="lazy"
             decoding="async"

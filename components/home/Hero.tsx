@@ -194,7 +194,7 @@ export function Hero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.15, ease }}
-          className="mt-6 max-w-xl text-balance text-lg text-muted-foreground"
+          className="mt-6 max-w-xl whitespace-pre-line text-balance text-lg text-muted-foreground"
         >
           {subtitle ?? DEFAULT_SUBTITLE}
         </motion.p>
