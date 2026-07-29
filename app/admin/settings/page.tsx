@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AvatarUploader } from "@/components/admin/AvatarUploader";
 import { AvailabilityToggle } from "@/components/admin/AvailabilityToggle";
+import { HeroTitleDesigner } from "@/components/admin/HeroTitleDesigner";
 import { HeroTextForm } from "@/components/admin/HeroTextForm";
 import { getSiteSettings } from "@/lib/data";
 
@@ -26,11 +27,12 @@ export default async function AdminSettingsPage() {
 
       <div className="mt-6 space-y-3">
         <AvatarUploader initialUrl={settings.avatar_url} />
-        <HeroTextForm
+        <HeroTitleDesigner
+          initialRich={settings.hero_title_rich}
           initialTitle={settings.hero_title}
-          initialSubtitle={settings.hero_subtitle}
-          initialHighlight={settings.hero_highlight}
+          initialFonts={settings.hero_fonts}
         />
+        <HeroTextForm initialSubtitle={settings.hero_subtitle} />
         <AvailabilityToggle initial={settings.available_for_work} />
       </div>
     </main>

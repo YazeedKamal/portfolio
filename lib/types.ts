@@ -79,6 +79,77 @@ export type PlayCanvas = {
   updated_at: string;
 };
 
+/** One word in the hand-designed hero headline, with its own styling. `id` is
+ *  stable so styling survives text edits; unset fields inherit the headline
+ *  defaults. `kind` is optional/"text" for backward compat with saved designs. */
+export type HeroTextSegment = {
+  id: string;
+  kind?: "text";
+  text: string;
+  /** Font id from the registry: a curated Google key, or a custom font id. */
+  font?: string;
+  /** 400 | 500 | 600 | 700 … */
+  weight?: number;
+  italic?: boolean;
+  /** em multiplier relative to the responsive base (≈0.5–2, default 1). */
+  size?: number;
+  color?: string | null;
+  /** Wrap this word in the draggable Figma-selection frame. */
+  figma?: boolean;
+};
+
+/** An uploaded SVG/image placed inline between words. `size` is its height as
+ *  an em multiplier so it scales with the headline. */
+export type HeroImageSegment = {
+  id: string;
+  kind: "image";
+  url: string;
+  alt?: string;
+  size?: number;
+  /** Fine vertical nudge in em (negative = up, positive = down, default 0). */
+  dy?: number;
+  /** Horizontal spacing on each side in em; negative tightens the gap to the
+   *  neighbouring words (default 0). */
+  gap?: number;
+  figma?: boolean;
+};
+
+export type HeroSegment = HeroTextSegment | HeroImageSegment;
+
+/** Narrows a segment to the image variant. */
+export function isHeroImage(seg: HeroSegment): seg is HeroImageSegment {
+  return seg.kind === "image";
+}
+
+/** Inline style for an inserted SVG — height, vertical nudge and side spacing.
+ *  Shared so the live hero and the admin designer stay pixel-identical. */
+export function heroImageStyle(seg: HeroImageSegment) {
+  return {
+    height: `${seg.size ?? 1}em`,
+    width: "auto",
+    transform: seg.dy ? `translateY(${seg.dy}em)` : undefined,
+    marginLeft: seg.gap ? `${seg.gap}em` : undefined,
+    marginRight: seg.gap ? `${seg.gap}em` : undefined,
+  };
+}
+
+/** The hero headline as designed by hand: lines of styled word-segments, plus
+ *  headline-wide spacing. Spacing fields are optional so already-saved designs
+ *  fall back to the built-in Tailwind defaults (tracking-tight / leading-[1.05]). */
+export type HeroRichTitle = {
+  lines: HeroSegment[][];
+  /** Letter spacing (tracking), in em. */
+  letterSpacing?: number;
+  /** Gap between words, in em (CSS word-spacing). */
+  wordSpacing?: number;
+  /** Line spacing as a unitless line-height multiplier. */
+  lineHeight?: number;
+};
+
+/** A custom font the user uploaded — stored in the `hero_fonts` library and
+ *  injected as an @font-face. */
+export type HeroFont = { id: string; name: string; url: string; format: string };
+
 export type SiteSettings = {
   id: string;
   available_for_work: boolean;
@@ -86,6 +157,8 @@ export type SiteSettings = {
   hero_title: string | null;
   hero_subtitle: string | null;
   hero_highlight: string | null;
+  hero_title_rich: HeroRichTitle | null;
+  hero_fonts: HeroFont[];
   updated_at: string;
 };
 

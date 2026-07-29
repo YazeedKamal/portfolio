@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import type { ContentBlock, Testimonial } from "@/lib/types";
+import type { ContentBlock, HeroFont, HeroRichTitle, Testimonial } from "@/lib/types";
 
 type TestimonialInput = {
   name: string;
@@ -171,6 +171,81 @@ export async function setHeroText(title: string, subtitle: string, highlight: st
   revalidatePath("/");
   revalidatePath("/admin/settings");
   return { ok: true };
+}
+
+export async function setHeroTitleRich(rich: HeroRichTitle | null) {
+  const supabase = await createClient();
+  // Keep the plain `hero_title` in sync (fallback + any plain-text consumers):
+  // the flattened words of the design, or leave untouched when clearing rich.
+  const plain =
+    rich && rich.lines.length > 0
+      ? rich.lines
+          .map((l) => l.filter((s) => s.kind !== "image").map((s) => (s as { text: string }).text).join(" "))
+          .join("\n")
+          .trim()
+      : null;
+  const { error } = await supabase.from("site_settings").upsert({
+    id: "main",
+    // null = fall back to the plain `hero_title` string / built-in default.
+    hero_title_rich: rich,
+    ...(plain ? { hero_title: plain } : {}),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
+export async function setHeroSubtitle(subtitle: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("site_settings").upsert({
+    id: "main",
+    // Explicit empty string hides the description; only a never-set null falls
+    // back to the built-in default copy (matches the homepage `??` logic).
+    hero_subtitle: subtitle.trim(),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
+export async function addHeroFont(font: HeroFont) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("hero_fonts")
+    .eq("id", "main")
+    .maybeSingle();
+  const existing = (data?.hero_fonts as HeroFont[] | null) ?? [];
+  const next = [...existing.filter((f) => f.id !== font.id), font];
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ id: "main", hero_fonts: next, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true, fonts: next };
+}
+
+export async function removeHeroFont(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("hero_fonts")
+    .eq("id", "main")
+    .maybeSingle();
+  const existing = (data?.hero_fonts as HeroFont[] | null) ?? [];
+  const next = existing.filter((f) => f.id !== id);
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ id: "main", hero_fonts: next, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true, fonts: next };
 }
 
 export async function setAvatar(url: string | null) {

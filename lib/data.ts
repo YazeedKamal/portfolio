@@ -1,6 +1,6 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { sampleProjects, sampleTestimonials } from "@/lib/sample-data";
-import type { Project, Testimonial } from "@/lib/types";
+import type { HeroFont, HeroRichTitle, Project, Testimonial } from "@/lib/types";
 
 /** Published projects for the home grid (falls back to sample data). */
 export async function getPublishedProjects(): Promise<Project[]> {
@@ -52,6 +52,8 @@ export async function getSiteSettings(): Promise<{
   hero_title: string | null;
   hero_subtitle: string | null;
   hero_highlight: string | null;
+  hero_title_rich: HeroRichTitle | null;
+  hero_fonts: HeroFont[];
 }> {
   const fallback = {
     available_for_work: true,
@@ -59,6 +61,8 @@ export async function getSiteSettings(): Promise<{
     hero_title: null,
     hero_subtitle: null,
     hero_highlight: null,
+    hero_title_rich: null,
+    hero_fonts: [],
   };
   if (!isSupabaseConfigured) return fallback;
 
@@ -66,13 +70,17 @@ export async function getSiteSettings(): Promise<{
   const { data, error } = await supabase
     .from("site_settings")
     .select(
-      "available_for_work, avatar_url, hero_title, hero_subtitle, hero_highlight",
+      "available_for_work, avatar_url, hero_title, hero_subtitle, hero_highlight, hero_title_rich, hero_fonts",
     )
     .eq("id", "main")
     .maybeSingle();
 
   if (error || !data) return fallback;
-  return data;
+  return {
+    ...data,
+    hero_title_rich: (data.hero_title_rich as HeroRichTitle | null) ?? null,
+    hero_fonts: (data.hero_fonts as HeroFont[] | null) ?? [],
+  };
 }
 
 export async function getTestimonials(): Promise<Testimonial[]> {

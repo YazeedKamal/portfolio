@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
+import { heroFontFamily } from "@/lib/hero-fonts";
+import { heroImageStyle, isHeroImage, type HeroFont, type HeroRichTitle, type HeroSegment } from "@/lib/types";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -129,6 +131,54 @@ function FigmaSelection({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Renders one word or inline SVG; `em` sizing keeps the responsive base intact. */
+function RichWord({ seg, fonts }: { seg: HeroSegment; fonts: HeroFont[] }) {
+  let node: React.ReactNode;
+  if (isHeroImage(seg)) {
+    node = (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={seg.url}
+        alt={seg.alt ?? ""}
+        className="inline-block align-middle"
+        style={heroImageStyle(seg)}
+      />
+    );
+  } else {
+    node = (
+      <span
+        style={{
+          fontFamily: heroFontFamily(seg.font, fonts),
+          // Words default to Regular (the h1 base is semibold).
+          fontWeight: seg.weight ?? 400,
+          fontStyle: seg.italic ? "italic" : undefined,
+          fontSize: seg.size && seg.size !== 1 ? `${seg.size}em` : undefined,
+          color: seg.color || undefined,
+        }}
+      >
+        {seg.text}
+      </span>
+    );
+  }
+  return seg.figma ? <FigmaSelection>{node}</FigmaSelection> : node;
+}
+
+/** Renders the hand-designed headline: lines of individually styled words. */
+function renderRichTitle(rich: HeroRichTitle, fonts: HeroFont[]) {
+  return rich.lines.map((line, li) => (
+    <span key={li} className="block">
+      {line.length === 0
+        ? " "
+        : line.map((seg, si) => (
+            <span key={seg.id}>
+              {si > 0 ? " " : null}
+              <RichWord seg={seg} fonts={fonts} />
+            </span>
+          ))}
+    </span>
+  ));
+}
+
 /** Wraps the highlight word/phrase (first match, case-insensitive). */
 function renderTitle(text: string, highlight?: string | null) {
   const needle = highlight?.trim();
@@ -149,12 +199,24 @@ export function Hero({
   title,
   subtitle,
   highlight,
+  rich,
+  fonts = [],
 }: {
   showAvailable?: boolean;
   title?: string | null;
   subtitle?: string | null;
   highlight?: string | null;
+  rich?: HeroRichTitle | null;
+  fonts?: HeroFont[];
 }) {
+  // Headline-wide spacing overrides the Tailwind defaults (tracking-tight /
+  // leading-[1.05]) only when the design sets them; older designs keep both.
+  const richStyle: React.CSSProperties = {};
+  if (rich) {
+    if (rich.letterSpacing != null) richStyle.letterSpacing = `${rich.letterSpacing}em`;
+    if (rich.wordSpacing != null) richStyle.wordSpacing = `${rich.wordSpacing}em`;
+    if (rich.lineHeight != null) richStyle.lineHeight = rich.lineHeight;
+  }
   return (
     <section className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 pb-28 text-center md:min-h-[92vh] md:pb-0">
       {/* soft radial glow */}
@@ -183,8 +245,11 @@ export function Hero({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.05, ease }}
         className="max-w-4xl whitespace-pre-line text-balance text-5xl font-semibold leading-[1.05] tracking-tight lg:text-7xl"
+        style={richStyle}
       >
-        {renderTitle(title || DEFAULT_TITLE, highlight)}
+        {rich && rich.lines.length > 0
+          ? renderRichTitle(rich, fonts)
+          : renderTitle(title || DEFAULT_TITLE, highlight)}
       </motion.h1>
 
       {/* `null`/undefined = never configured → default copy; an explicit

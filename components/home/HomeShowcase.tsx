@@ -13,7 +13,7 @@ import {
 import { Hero } from "@/components/home/Hero";
 import { ProjectCard } from "@/components/home/ProjectCard";
 import { Reveal } from "@/components/ui/Reveal";
-import type { Project } from "@/lib/types";
+import type { HeroFont, HeroRichTitle, Project } from "@/lib/types";
 
 // Every project card floats in the hero: at most 4 on the sides, ALL the
 // rest in the centered bottom row (spacing adapts to the count).
@@ -79,12 +79,16 @@ export function HomeShowcase({
   heroTitle,
   heroSubtitle,
   heroHighlight,
+  heroRich,
+  heroFonts,
 }: {
   projects: Project[];
   showAvailable: boolean;
   heroTitle: string | null;
   heroSubtitle: string | null;
   heroHighlight: string | null;
+  heroRich: HeroRichTitle | null;
+  heroFonts: HeroFont[];
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -237,6 +241,8 @@ export function HomeShowcase({
         title={heroTitle}
         subtitle={heroSubtitle}
         highlight={heroHighlight}
+        rich={heroRich}
+        fonts={heroFonts}
       />
 
       <section id="work" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">

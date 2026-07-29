@@ -19,6 +19,8 @@ export default async function Home() {
         heroTitle={settings.hero_title}
         heroSubtitle={settings.hero_subtitle}
         heroHighlight={settings.hero_highlight}
+        heroRich={settings.hero_title_rich}
+        heroFonts={settings.hero_fonts}
       />
       <Testimonials testimonials={testimonials} />
     </main>
