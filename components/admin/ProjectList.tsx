@@ -104,28 +104,37 @@ function Row({
         <GripVertical className="h-5 w-5" />
       </button>
 
-      <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-border bg-background">
-        {project.cover_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={project.cover_url} alt="" className="h-full w-full object-cover" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate font-medium">{project.title}</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-              project.published
-                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                : "bg-foreground/10 text-muted-foreground"
-            }`}
-          >
-            {project.published ? "Published" : "Draft"}
-          </span>
+      <Link
+        href={`/admin/projects/${project.id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl transition-colors hover:bg-foreground/5"
+      >
+        <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-border bg-background">
+          {(project.card_url ?? project.cover_url) && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={project.card_url ?? project.cover_url ?? ""}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          )}
         </div>
-        <p className="truncate text-sm text-muted-foreground">/{project.slug}</p>
-      </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate font-medium">{project.title}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                project.published
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                  : "bg-foreground/10 text-muted-foreground"
+              }`}
+            >
+              {project.published ? "Published" : "Draft"}
+            </span>
+          </div>
+          <p className="truncate text-sm text-muted-foreground">/{project.slug}</p>
+        </div>
+      </Link>
 
       <div className="flex items-center gap-1">
         <button
