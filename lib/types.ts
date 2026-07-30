@@ -159,6 +159,10 @@ export type SiteSettings = {
   hero_highlight: string | null;
   hero_title_rich: HeroRichTitle | null;
   hero_fonts: HeroFont[];
+  about_eyebrow: string | null;
+  about_title: string | null;
+  about_body: string | null;
+  about_image_url: string | null;
   updated_at: string;
 };
 

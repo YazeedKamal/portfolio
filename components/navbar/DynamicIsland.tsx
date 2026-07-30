@@ -6,7 +6,10 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-const links = [{ href: "/#work", label: "Work" }];
+const links = [
+  { href: "/#work", label: "Work" },
+  { href: "/about", label: "About" },
+];
 
 export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   const pathname = usePathname();
@@ -58,9 +61,11 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
   if (pathname.startsWith("/admin")) return null;
 
   const isHome = pathname === "/";
-  // Which nav slot carries the active dot. Priority: Hero (logo) > Work.
+  const aboutActive = pathname.startsWith("/about");
+  // Which nav slot carries the active dot. Priority: About > Hero (logo) > Work.
   const heroActive = isHome && heroMode;
-  const workActive = !heroActive && (isHome || pathname.startsWith("/work"));
+  const workActive =
+    !heroActive && !aboutActive && (isHome || pathname.startsWith("/work"));
 
   return (
     <div
@@ -106,7 +111,7 @@ export function DynamicIsland({ avatarUrl }: { avatarUrl?: string | null }) {
           onMouseLeave={() => setHovered(null)}
         >
           {links.map((link) => {
-            const active = workActive;
+            const active = link.href === "/about" ? aboutActive : workActive;
             return (
               <Link
                 key={link.href}

@@ -499,8 +499,12 @@ export function HeroTitleDesigner({
                           <button
                             type="button"
                             onPointerDown={(e) => startImageDrag(e, seg)}
+                            // Selection happens on pointer-up (startImageDrag);
+                            // stop the trailing click from bubbling to the
+                            // canvas, which would immediately clear it.
+                            onClick={(e) => e.stopPropagation()}
                             style={{ touchAction: "none" }}
-                            className={`block cursor-grab rounded px-0.5 active:cursor-grabbing ${
+                            className={`flex items-center cursor-grab rounded px-0.5 active:cursor-grabbing ${
                               seg.id === selectedId
                                 ? "bg-[#0D99FF]/10 ring-2 ring-[#0D99FF]"
                                 : "hover:bg-foreground/5"

@@ -1,13 +1,12 @@
 import { HomeShowcase } from "@/components/home/HomeShowcase";
-import { Testimonials } from "@/components/home/Testimonials";
-import { getPublishedProjects, getTestimonials, getSiteSettings } from "@/lib/data";
+import { Footer } from "@/components/home/Footer";
+import { getPublishedProjects, getSiteSettings } from "@/lib/data";
 
 export const revalidate = 0;
 
 export default async function Home() {
-  const [projects, testimonials, settings] = await Promise.all([
+  const [projects, settings] = await Promise.all([
     getPublishedProjects(),
-    getTestimonials(),
     getSiteSettings(),
   ]);
 
@@ -22,7 +21,7 @@ export default async function Home() {
         heroRich={settings.hero_title_rich}
         heroFonts={settings.hero_fonts}
       />
-      <Testimonials testimonials={testimonials} />
+      <Footer />
     </main>
   );
 }

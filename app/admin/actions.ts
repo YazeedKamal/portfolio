@@ -248,6 +248,30 @@ export async function removeHeroFont(id: string) {
   return { ok: true, fonts: next };
 }
 
+export async function setAboutSection(input: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+}) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("site_settings").upsert({
+    id: "main",
+    // Empty fields fall back to the built-in default copy on the homepage
+    // (matches the `??` logic in the About component). Keep them as null so the
+    // defaults show, rather than rendering blank.
+    about_eyebrow: input.eyebrow.trim().slice(0, 60) || null,
+    about_title: input.title.trim().slice(0, 200) || null,
+    about_body: input.body.trim().slice(0, 2000) || null,
+    about_image_url: input.imageUrl?.trim() || null,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
 export async function setAvatar(url: string | null) {
   const supabase = await createClient();
   const { error } = await supabase

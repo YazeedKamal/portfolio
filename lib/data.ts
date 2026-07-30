@@ -54,6 +54,10 @@ export async function getSiteSettings(): Promise<{
   hero_highlight: string | null;
   hero_title_rich: HeroRichTitle | null;
   hero_fonts: HeroFont[];
+  about_eyebrow: string | null;
+  about_title: string | null;
+  about_body: string | null;
+  about_image_url: string | null;
 }> {
   const fallback = {
     available_for_work: true,
@@ -63,6 +67,10 @@ export async function getSiteSettings(): Promise<{
     hero_highlight: null,
     hero_title_rich: null,
     hero_fonts: [],
+    about_eyebrow: null,
+    about_title: null,
+    about_body: null,
+    about_image_url: null,
   };
   if (!isSupabaseConfigured) return fallback;
 
@@ -70,7 +78,7 @@ export async function getSiteSettings(): Promise<{
   const { data, error } = await supabase
     .from("site_settings")
     .select(
-      "available_for_work, avatar_url, hero_title, hero_subtitle, hero_highlight, hero_title_rich, hero_fonts",
+      "available_for_work, avatar_url, hero_title, hero_subtitle, hero_highlight, hero_title_rich, hero_fonts, about_eyebrow, about_title, about_body, about_image_url",
     )
     .eq("id", "main")
     .maybeSingle();

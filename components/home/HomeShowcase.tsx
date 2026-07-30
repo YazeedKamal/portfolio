@@ -250,7 +250,7 @@ export function HomeShowcase({
           <div className="mb-12 flex items-end justify-between">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Projects
+                Usecases
               </h2>
             </div>
           </div>

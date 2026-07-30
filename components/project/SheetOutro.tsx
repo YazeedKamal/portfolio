@@ -4,16 +4,8 @@ import { useContext } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Mail } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { CONTACT_EMAIL, SOCIALS } from "@/lib/contact";
 import { SheetCloseContext } from "./sheet-close-context";
-
-/** Ways to reach me — mirrors the homepage footer so contact info stays in one
- *  voice across the site. Swap these for the real handles. */
-const CONTACT_EMAIL = "hello@example.com";
-const SOCIALS = [
-  { label: "Twitter / X", href: "https://x.com" },
-  { label: "LinkedIn", href: "https://linkedin.com" },
-  { label: "Dribbble", href: "https://dribbble.com" },
-];
 
 /**
  * The tail of every project case study inside the bottom sheet: a curated
@@ -47,7 +39,7 @@ export function SheetOutro({
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                More projects
+                More usecases
               </h2>
             </div>
             {interactive && <ViewAllLink />}

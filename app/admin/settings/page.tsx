@@ -5,6 +5,7 @@ import { AvatarUploader } from "@/components/admin/AvatarUploader";
 import { AvailabilityToggle } from "@/components/admin/AvailabilityToggle";
 import { HeroTitleDesigner } from "@/components/admin/HeroTitleDesigner";
 import { HeroTextForm } from "@/components/admin/HeroTextForm";
+import { AboutForm } from "@/components/admin/AboutForm";
 import { getSiteSettings } from "@/lib/data";
 
 export const revalidate = 0;
@@ -33,6 +34,12 @@ export default async function AdminSettingsPage() {
           initialFonts={settings.hero_fonts}
         />
         <HeroTextForm initialSubtitle={settings.hero_subtitle} />
+        <AboutForm
+          initialEyebrow={settings.about_eyebrow}
+          initialTitle={settings.about_title}
+          initialBody={settings.about_body}
+          initialImageUrl={settings.about_image_url}
+        />
         <AvailabilityToggle initial={settings.available_for_work} />
       </div>
     </main>
