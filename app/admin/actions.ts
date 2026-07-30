@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import type { ContentBlock, HeroFont, HeroRichTitle, Testimonial } from "@/lib/types";
+import type {
+  ContentBlock,
+  FooterLogo,
+  HeroFont,
+  HeroRichTitle,
+  Testimonial,
+} from "@/lib/types";
 
 type TestimonialInput = {
   name: string;
@@ -246,6 +252,76 @@ export async function removeHeroFont(id: string) {
   revalidatePath("/");
   revalidatePath("/admin/settings");
   return { ok: true, fonts: next };
+}
+
+/** Clamp an incoming footer-logo record to safe, stored values. */
+function cleanFooterLogo(input: FooterLogo): FooterLogo {
+  const shape =
+    input.shape === "circle" || input.shape === "square" ? input.shape : "free";
+  return {
+    id: input.id,
+    url: input.url,
+    size: Math.min(96, Math.max(20, Math.round(input.size) || 46)),
+    shape,
+    count: Math.min(20, Math.max(1, Math.round(input.count) || 3)),
+    label: input.label?.trim().slice(0, 60) || undefined,
+  };
+}
+
+export async function addFooterLogo(logo: FooterLogo) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("footer_logos")
+    .eq("id", "main")
+    .maybeSingle();
+  const existing = (data?.footer_logos as FooterLogo[] | null) ?? [];
+  const next = [...existing, cleanFooterLogo(logo)];
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ id: "main", footer_logos: next, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true, logos: next };
+}
+
+export async function updateFooterLogo(id: string, patch: Partial<FooterLogo>) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("footer_logos")
+    .eq("id", "main")
+    .maybeSingle();
+  const existing = (data?.footer_logos as FooterLogo[] | null) ?? [];
+  const next = existing.map((l) =>
+    l.id === id ? cleanFooterLogo({ ...l, ...patch, id: l.id, url: l.url }) : l,
+  );
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ id: "main", footer_logos: next, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true, logos: next };
+}
+
+export async function removeFooterLogo(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("footer_logos")
+    .eq("id", "main")
+    .maybeSingle();
+  const existing = (data?.footer_logos as FooterLogo[] | null) ?? [];
+  const next = existing.filter((l) => l.id !== id);
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ id: "main", footer_logos: next, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true, logos: next };
 }
 
 export async function setAboutSection(input: {

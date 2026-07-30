@@ -21,7 +21,7 @@ export default async function Home() {
         heroRich={settings.hero_title_rich}
         heroFonts={settings.hero_fonts}
       />
-      <Footer />
+      <Footer footerLogos={settings.footer_logos} />
     </main>
   );
 }

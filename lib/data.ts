@@ -1,6 +1,12 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { sampleProjects, sampleTestimonials } from "@/lib/sample-data";
-import type { HeroFont, HeroRichTitle, Project, Testimonial } from "@/lib/types";
+import type {
+  FooterLogo,
+  HeroFont,
+  HeroRichTitle,
+  Project,
+  Testimonial,
+} from "@/lib/types";
 
 /** Published projects for the home grid (falls back to sample data). */
 export async function getPublishedProjects(): Promise<Project[]> {
@@ -58,6 +64,7 @@ export async function getSiteSettings(): Promise<{
   about_title: string | null;
   about_body: string | null;
   about_image_url: string | null;
+  footer_logos: FooterLogo[];
 }> {
   const fallback = {
     available_for_work: true,
@@ -71,6 +78,7 @@ export async function getSiteSettings(): Promise<{
     about_title: null,
     about_body: null,
     about_image_url: null,
+    footer_logos: [],
   };
   if (!isSupabaseConfigured) return fallback;
 
@@ -84,10 +92,22 @@ export async function getSiteSettings(): Promise<{
     .maybeSingle();
 
   if (error || !data) return fallback;
+
+  // Fetched in its own query so a missing `footer_logos` column (before the
+  // 0013 migration is applied) falls back to [] without breaking the rest.
+  let footer_logos: FooterLogo[] = [];
+  const { data: fl } = await supabase
+    .from("site_settings")
+    .select("footer_logos")
+    .eq("id", "main")
+    .maybeSingle();
+  if (fl?.footer_logos) footer_logos = fl.footer_logos as FooterLogo[];
+
   return {
     ...data,
     hero_title_rich: (data.hero_title_rich as HeroRichTitle | null) ?? null,
     hero_fonts: (data.hero_fonts as HeroFont[] | null) ?? [],
+    footer_logos,
   };
 }
 

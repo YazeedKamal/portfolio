@@ -6,6 +6,7 @@ import { AvailabilityToggle } from "@/components/admin/AvailabilityToggle";
 import { HeroTitleDesigner } from "@/components/admin/HeroTitleDesigner";
 import { HeroTextForm } from "@/components/admin/HeroTextForm";
 import { AboutForm } from "@/components/admin/AboutForm";
+import { FooterLogosManager } from "@/components/admin/FooterLogosManager";
 import { getSiteSettings } from "@/lib/data";
 
 export const revalidate = 0;
@@ -40,6 +41,7 @@ export default async function AdminSettingsPage() {
           initialBody={settings.about_body}
           initialImageUrl={settings.about_image_url}
         />
+        <FooterLogosManager initialLogos={settings.footer_logos} />
         <AvailabilityToggle initial={settings.available_for_work} />
       </div>
     </main>

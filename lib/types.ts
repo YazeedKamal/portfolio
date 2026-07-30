@@ -150,6 +150,25 @@ export type HeroRichTitle = {
  *  injected as an @font-face. */
 export type HeroFont = { id: string; name: string; url: string; format: string };
 
+/** How a footer logo sits in the physics playground:
+ *  - `free`   : the SVG/PNG tumbles as-is (collision box = its bounds).
+ *  - `circle` : the logo sits inside a round themed badge.
+ *  - `square` : the logo sits inside a rounded-square themed badge. */
+export type FooterLogoShape = "free" | "circle" | "square";
+
+/** A logo the user uploaded for the homepage footer physics playground —
+ *  stored in the `footer_logos` array on site_settings. `url` is an inline
+ *  `data:` SVG (or an image URL); `size` is the on-screen longest edge in px. */
+export type FooterLogo = {
+  id: string;
+  url: string;
+  size: number;
+  shape: FooterLogoShape;
+  /** How many copies of this logo tumble in the footer. */
+  count: number;
+  label?: string;
+};
+
 export type SiteSettings = {
   id: string;
   available_for_work: boolean;
@@ -163,6 +182,7 @@ export type SiteSettings = {
   about_title: string | null;
   about_body: string | null;
   about_image_url: string | null;
+  footer_logos: FooterLogo[];
   updated_at: string;
 };
 
