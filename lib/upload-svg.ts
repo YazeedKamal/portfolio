@@ -33,7 +33,7 @@ function tightenSvgViewBox(text: string): string {
     const holder = document.createElement("div");
     holder.style.cssText =
       "position:absolute;left:-99999px;top:-99999px;width:0;height:0;overflow:hidden;";
-    const live = document.importNode(svg, true) as SVGSVGElement;
+    const live = document.importNode(svg, true) as unknown as SVGSVGElement;
     holder.appendChild(live);
     document.body.appendChild(holder);
 
