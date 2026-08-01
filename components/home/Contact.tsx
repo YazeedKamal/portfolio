@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/ui/Reveal";
-import { CONTACT_EMAIL, LINKEDIN_URL, SOCIALS } from "@/lib/contact";
+import { LINKEDIN_URL } from "@/lib/contact";
 
 /** LinkedIn brand glyph — inline so it doesn't depend on Lucide's
  *  (deprecated) brand icons. Inherits color via `currentColor`. */
@@ -18,8 +18,6 @@ function LinkedInLogo({ className }: { className?: string }) {
  * `lib/contact`.
  */
 export function Contact() {
-  const secondarySocials = SOCIALS.filter((s) => s.href !== LINKEDIN_URL);
-
   return (
     <section
       id="contact"
@@ -32,7 +30,7 @@ export function Contact() {
             id="contact-heading"
             className="max-w-2xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl"
           >
-            Have a product worth designing well? Let&apos;s talk.
+            I&apos;d love to hear what you&apos;re working on.
           </h2>
         </Reveal>
 
@@ -46,28 +44,6 @@ export function Contact() {
             <LinkedInLogo className="h-5 w-5" />
             Connect on LinkedIn
           </a>
-        </Reveal>
-
-        <Reveal delay={0.18}>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="transition-colors hover:text-foreground"
-            >
-              {CONTACT_EMAIL}
-            </a>
-            {secondarySocials.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-foreground"
-              >
-                {s.label}
-              </a>
-            ))}
-          </div>
         </Reveal>
       </div>
     </section>

@@ -2,10 +2,20 @@
 
 import { useContext } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Mail } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/types";
-import { CONTACT_EMAIL, SOCIALS } from "@/lib/contact";
+import { LINKEDIN_URL } from "@/lib/contact";
 import { SheetCloseContext } from "./sheet-close-context";
+
+/** LinkedIn brand glyph — inline so it doesn't depend on Lucide's
+ *  (deprecated) brand icons. Inherits color via `currentColor`. */
+function LinkedInLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z" />
+    </svg>
+  );
+}
 
 /**
  * The tail of every project case study inside the bottom sheet: a curated
@@ -61,40 +71,19 @@ export function SheetOutro({
           className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-[80%] rounded-full bg-foreground/[0.06] blur-3xl"
         />
         <div className="relative">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Let&apos;s work together
-          </p>
-          <h2 className="mx-auto mt-3 max-w-xl text-balance text-2xl font-semibold tracking-tight sm:text-4xl">
-            Have a product worth designing well?
+          <h2 className="mx-auto max-w-xl text-balance text-2xl font-semibold tracking-tight sm:text-4xl">
+            I&apos;d love to hear what you&apos;re working on.
           </h2>
 
           <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="mx-auto mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-transform hover:scale-[1.03] active:scale-95"
+            href={LINKEDIN_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="mx-auto mt-8 inline-flex items-center gap-2.5 rounded-full bg-[#0A66C2] px-6 py-3 text-sm font-medium text-white transition-transform hover:scale-[1.03] active:scale-95"
           >
-            <Mail className="h-4 w-4" />
-            Start a conversation
+            <LinkedInLogo className="h-5 w-5" />
+            Connect on LinkedIn
           </a>
-
-          <div className="mx-auto mt-10 flex max-w-md flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-border pt-8">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {CONTACT_EMAIL}
-            </a>
-            {SOCIALS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {s.label}
-              </a>
-            ))}
-          </div>
         </div>
       </div>
       </div>

@@ -458,12 +458,11 @@ export function HeroTitleDesigner({
   const imgGap = imgSel?.gap ?? 0;
 
   return (
-    <div className="rounded-2xl border border-border bg-card px-5 py-4">
+    <div>
       {/* Custom fonts, injected live so newly uploaded ones render immediately. */}
       <HeroFontFaces fonts={fonts} />
 
-      <p className="text-sm font-medium">Hero headline</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Design it by hand — click a word to restyle it, drag an SVG to move it
         between any two words, resize it from its corner, and tune the spacing.
       </p>

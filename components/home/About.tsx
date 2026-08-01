@@ -69,7 +69,7 @@ export function About({
             <img
               src={imageUrl}
               alt="Yazeed"
-              className="ml-auto aspect-square w-full max-w-sm rounded-3xl object-cover shadow-sm"
+              className="ml-auto aspect-square w-full max-w-[280px] rounded-3xl object-cover shadow-sm sm:max-w-[300px]"
             />
           </Reveal>
         )}

@@ -9,7 +9,6 @@ import { signOut } from "@/app/admin/actions";
 
 const tabs = [
   { href: "/admin", label: "Projects" },
-  { href: "/admin/testimonials", label: "Testimonials" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

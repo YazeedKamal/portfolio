@@ -100,7 +100,7 @@ export function AvatarUploader({ initialUrl }: { initialUrl: string | null }) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4">
+    <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
         <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-foreground text-sm font-bold text-background">
           {avatarUrl ? (
@@ -111,8 +111,7 @@ export function AvatarUploader({ initialUrl }: { initialUrl: string | null }) {
           )}
         </span>
         <div>
-          <p className="text-sm font-medium">Profile photo</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Shown in the navbar. Crop it before saving.
           </p>
           {error && !source && <p className="mt-1 text-xs text-red-500">{error}</p>}

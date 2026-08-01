@@ -15,12 +15,16 @@ export function ImageUploader({
   label = "Image",
   aspect = "aspect-[16/9]",
   bucket = "project-images",
+  maxWidthClass,
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
   label?: string;
   aspect?: string;
   bucket?: "project-images" | "avatars";
+  /** Optional Tailwind max-width for the preview box (e.g. "max-w-xs").
+   *  Keeps square previews from ballooning to the full column width. */
+  maxWidthClass?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -51,7 +55,7 @@ export function ImageUploader({
   return (
     <div>
       <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      <div className={`relative ${aspect} w-full overflow-hidden rounded-2xl border border-dashed border-border bg-background`}>
+      <div className={`relative ${aspect} w-full ${maxWidthClass ?? ""} overflow-hidden rounded-2xl border border-dashed border-border bg-background`}>
         {value ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}

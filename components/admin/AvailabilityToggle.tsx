@@ -18,13 +18,10 @@ export function AvailabilityToggle({ initial }: { initial: boolean }) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4">
-      <div>
-        <p className="text-sm font-medium">Available for new work</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Shows the green availability badge on your homepage hero.
-        </p>
-      </div>
+    <div className="flex items-center justify-between gap-4">
+      <p className="text-xs text-muted-foreground">
+        Shows the green availability badge on your homepage hero.
+      </p>
       <button
         type="button"
         role="switch"

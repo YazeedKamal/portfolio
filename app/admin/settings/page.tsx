@@ -7,6 +7,7 @@ import { HeroTitleDesigner } from "@/components/admin/HeroTitleDesigner";
 import { HeroTextForm } from "@/components/admin/HeroTextForm";
 import { AboutForm } from "@/components/admin/AboutForm";
 import { FooterLogosManager } from "@/components/admin/FooterLogosManager";
+import { CollapsibleSection } from "@/components/admin/CollapsibleSection";
 import { getSiteSettings } from "@/lib/data";
 
 export const revalidate = 0;
@@ -28,21 +29,38 @@ export default async function AdminSettingsPage() {
       </div>
 
       <div className="mt-6 space-y-3">
-        <AvatarUploader initialUrl={settings.avatar_url} />
-        <HeroTitleDesigner
-          initialRich={settings.hero_title_rich}
-          initialTitle={settings.hero_title}
-          initialFonts={settings.hero_fonts}
-        />
-        <HeroTextForm initialSubtitle={settings.hero_subtitle} />
-        <AboutForm
-          initialEyebrow={settings.about_eyebrow}
-          initialTitle={settings.about_title}
-          initialBody={settings.about_body}
-          initialImageUrl={settings.about_image_url}
-        />
-        <FooterLogosManager initialLogos={settings.footer_logos} />
-        <AvailabilityToggle initial={settings.available_for_work} />
+        <CollapsibleSection title="Profile photo" defaultOpen>
+          <AvatarUploader initialUrl={settings.avatar_url} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Hero headline">
+          <HeroTitleDesigner
+            initialRich={settings.hero_title_rich}
+            initialTitle={settings.hero_title}
+            initialFonts={settings.hero_fonts}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Hero description">
+          <HeroTextForm initialSubtitle={settings.hero_subtitle} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="About section">
+          <AboutForm
+            initialEyebrow={settings.about_eyebrow}
+            initialTitle={settings.about_title}
+            initialBody={settings.about_body}
+            initialImageUrl={settings.about_image_url}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Footer logos">
+          <FooterLogosManager initialLogos={settings.footer_logos} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Available for new work">
+          <AvailabilityToggle initial={settings.available_for_work} />
+        </CollapsibleSection>
       </div>
     </main>
   );

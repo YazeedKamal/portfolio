@@ -31,9 +31,8 @@ export function HeroTextForm({ initialSubtitle }: { initialSubtitle: string | nu
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card px-5 py-4">
-      <p className="text-sm font-medium">Hero description</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+    <div>
+      <p className="text-xs text-muted-foreground">
         The paragraph under the headline on your homepage.
       </p>
 

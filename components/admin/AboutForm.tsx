@@ -47,9 +47,8 @@ export function AboutForm({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card px-5 py-4">
-      <p className="text-sm font-medium">About section</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+    <div>
+      <p className="text-xs text-muted-foreground">
         The personal section near the bottom of your homepage — photo, headline,
         and story.
       </p>
@@ -60,6 +59,7 @@ export function AboutForm({
           onChange={setImageUrl}
           label="Photo"
           aspect="aspect-square"
+          maxWidthClass="max-w-[260px]"
         />
         <p className="-mt-2 text-xs text-muted-foreground">
           Shown large on the right. Leave empty to fall back to your profile

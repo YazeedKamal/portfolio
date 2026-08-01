@@ -4,7 +4,7 @@
 export const CONTACT_EMAIL = "hello@example.com";
 
 /** Primary channel — featured in the homepage contact section. */
-export const LINKEDIN_URL = "https://linkedin.com";
+export const LINKEDIN_URL = "https://www.linkedin.com/in/yazeed-kamal/";
 
 export const SOCIALS = [
   { label: "Twitter / X", href: "https://x.com" },

@@ -97,11 +97,10 @@ export function FooterLogosManager({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card px-5 py-4">
+    <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium">Footer logos</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Upload SVGs (or PNGs) that tumble in the homepage footer and scatter
             away from the cursor. Set a size and shape for each.
           </p>
