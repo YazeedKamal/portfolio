@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { DynamicIsland } from "@/components/navbar/DynamicIsland";
 import { HeroFontFaces } from "@/components/hero/HeroFontFaces";
 import { getSiteSettings } from "@/lib/data";
+import { SITE, SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,11 +39,35 @@ const heroFontVars = [heroSans, heroSerif, heroGrotesk, heroDisplay, heroScript,
   .map((f) => f.variable)
   .join(" ");
 
-export const metadata: Metadata = {
-  title: "Yazeed — Product Designer",
-  description:
-    "Portfolio of a product designer. Selected work, case studies, and a place to play.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const description = settings.hero_subtitle?.trim() || SITE.tagline;
+  const defaultTitle = `${SITE.name} — ${SITE.role}`;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: defaultTitle, template: `%s — ${SITE.shortName}` },
+    description,
+    applicationName: SITE.name,
+    authors: [{ name: SITE.name, url: SITE_URL }],
+    creator: SITE.name,
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      siteName: SITE.name,
+      title: defaultTitle,
+      description,
+      url: SITE_URL,
+      images: [{ url: "/api/og", width: 1200, height: 630, alt: defaultTitle }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: defaultTitle,
+      description,
+      images: ["/api/og"],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
