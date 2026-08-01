@@ -346,12 +346,14 @@ export function FooterPhysics({ logos = [] }: { logos?: FooterLogo[] }) {
     };
   }, [logos]);
 
+  // No logos → no playground; collapse the reserved height so the footer
+  // sits directly under the section above (no empty gap).
   return (
     <div
       ref={containerRef}
       aria-hidden="true"
       className="relative w-full cursor-default select-none overflow-hidden"
-      style={{ height: HEIGHT }}
+      style={{ height: logos.length === 0 ? 0 : HEIGHT }}
     />
   );
 }

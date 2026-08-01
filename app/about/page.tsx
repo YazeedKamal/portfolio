@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { About } from "@/components/home/About";
-import { Contact } from "@/components/home/Contact";
 import { Footer } from "@/components/home/Footer";
 import { getSiteSettings } from "@/lib/data";
 import { htmlToPlainText } from "@/lib/content-to-markdown";
@@ -49,7 +48,6 @@ export default async function AboutPage() {
         body={settings.about_body}
         imageUrl={settings.about_image_url ?? settings.avatar_url}
       />
-      <Contact />
       <Footer />
     </main>
   );

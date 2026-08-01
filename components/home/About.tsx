@@ -1,4 +1,15 @@
 import { Reveal } from "@/components/ui/Reveal";
+import { LINKEDIN_URL } from "@/lib/contact";
+
+/** LinkedIn brand glyph — inline so it doesn't depend on Lucide's
+ *  (deprecated) brand icons. Inherits color via `currentColor`. */
+function LinkedInLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z" />
+    </svg>
+  );
+}
 
 /** Built-in default copy — used until the fields are set in /admin/settings. */
 const DEFAULT_EYEBROW = "About";
@@ -61,6 +72,18 @@ export function About({
               ))}
             </div>
           </Reveal>
+
+          <Reveal delay={0.2}>
+            <a
+              href={LINKEDIN_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-[#0A66C2] px-6 py-3 text-sm font-medium text-white transition-transform hover:scale-[1.03] active:scale-95"
+            >
+              <LinkedInLogo className="h-5 w-5" />
+              Connect on LinkedIn
+            </a>
+          </Reveal>
         </div>
 
         {imageUrl && (
@@ -69,7 +92,7 @@ export function About({
             <img
               src={imageUrl}
               alt="Yazeed"
-              className="ml-auto aspect-square w-full max-w-[280px] rounded-3xl object-cover shadow-sm sm:max-w-[300px]"
+              className="ml-auto aspect-square w-full max-w-[280px] rounded-3xl object-cover shadow-sm sm:max-w-[300px] lg:aspect-[3/4]"
             />
           </Reveal>
         )}
