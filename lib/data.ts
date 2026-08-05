@@ -19,8 +19,14 @@ export async function getPublishedProjects(): Promise<Project[]> {
     .eq("published", true)
     .order("order_index", { ascending: true });
 
-  if (error || !data) return sampleProjects;
-  return data as Project[];
+  // Never fall back to sample data in production — that would leak the old
+  // placeholder projects onto the live site on a transient/cold-start error.
+  // Log and return empty instead; sample data is only for local dev (above).
+  if (error) {
+    console.error("[getPublishedProjects] Supabase error:", error.message);
+    return [];
+  }
+  return (data ?? []) as Project[];
 }
 
 /** Other published projects to surface at the end of a case study — the whole
@@ -120,6 +126,10 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     .select("*")
     .order("order_index", { ascending: true });
 
-  if (error || !data) return sampleTestimonials;
-  return data as Testimonial[];
+  // Same rationale as getPublishedProjects: no sample fallback in production.
+  if (error) {
+    console.error("[getTestimonials] Supabase error:", error.message);
+    return [];
+  }
+  return (data ?? []) as Testimonial[];
 }
