@@ -23,16 +23,17 @@ export async function generateMetadata({
 
   const description = projectSummary(project);
   const path = `/work/${project.slug}`;
-  // Route the cover through /api/og/cover, which re-encodes it to a 1200×630
-  // JPEG — the stored covers are WebP, and WhatsApp/LinkedIn/X/iMessage don't
-  // render WebP link previews. Projects without a cover fall back to the
-  // branded PNG card.
-  const ogImage = project.cover_url
+  // Use the same image the homepage card shows (uploaded card thumbnail, else
+  // cover), routed through /api/og/cover which re-encodes it to a 1200×630 JPEG.
+  // The stored images are WebP, and WhatsApp/LinkedIn/X/iMessage don't render
+  // WebP link previews. Projects with no image fall back to the branded PNG card.
+  const hasCardImage = !!(project.card_url ?? project.cover_url);
+  const ogImage = hasCardImage
     ? `/api/og/cover?slug=${encodeURIComponent(project.slug)}`
     : `/api/og?title=${encodeURIComponent(project.title)}&subtitle=${encodeURIComponent(
         project.subtitle ?? "",
       )}`;
-  const ogImageType = project.cover_url ? "image/jpeg" : "image/png";
+  const ogImageType = hasCardImage ? "image/jpeg" : "image/png";
 
   return {
     title: project.title,
